@@ -1,0 +1,47 @@
+.empty-tip {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+  font-size: 30rpx;
+}
+.dish-card {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+}
+.dish-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  flex-shrink: 0;
+  background: #eee;
+}
+.dish-info {
+  flex: 1;
+  margin-left: 24rpx;
+}
+.dish-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 10rpx;
+}
+.dish-meta {
+  display: flex;
+  gap: 16rpx;
+  font-size: 24rpx;
+  color: #888;
+  margin-bottom: 6rpx;
+}
+.dish-price { color: #FF6B35; font-weight: bold; }
+.dish-score { color: #4CAF50; }
+.dish-shop { font-size: 24rpx; color: #aaa; }
+.choose-btn {
+  background: #FF6B35;
+  color: #fff;
+  padding: 16rpx 28rpx;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}

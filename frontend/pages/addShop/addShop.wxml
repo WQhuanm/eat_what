@@ -1,0 +1,30 @@
+<view class="container">
+  <view class="card">
+    <text class="section-title">🏪 添加店铺</text>
+
+    <view class="form-item">
+      <text class="form-label">店铺名称 *</text>
+      <input class="form-input" placeholder="如：老王烧烤" value="{{form.name}}" bindinput="onInput" data-field="name" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">地址</text>
+      <input class="form-input" placeholder="详细地址" value="{{form.address}}" bindinput="onInput" data-field="address" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">城市</text>
+      <input class="form-input" placeholder="如：广州" value="{{form.city}}" bindinput="onInput" data-field="city" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系方式</text>
+      <input class="form-input" placeholder="手机号或电话" value="{{form.contact}}" bindinput="onInput" data-field="contact" />
+    </view>
+
+    <button class="btn-primary" style="margin-top:10rpx" bindtap="onGetLocation">📍 获取店铺位置</button>
+    <text class="location-text" wx:if="{{form.latitude}}">经度: {{form.longitude}} 纬度: {{form.latitude}}</text>
+  </view>
+
+  <button class="btn-primary" style="margin-top:30rpx" bindtap="submitShop" loading="{{submitting}}">提交店铺</button>
+</view>

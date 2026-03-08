@@ -1,0 +1,84 @@
+<wxs src="./editProfile.wxs" module="tools" />
+<view class="container">
+  <!-- 基础生理信息 -->
+  <view class="card">
+    <text class="section-title">基础信息</text>
+    <view class="form-item">
+      <text class="form-label">年龄</text>
+      <input class="form-input" type="number" placeholder="请输入年龄" value="{{form.age}}" bindinput="onInput" data-field="age" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">性别</text>
+      <view class="radio-group">
+        <view class="radio-item {{form.gender === 1 ? 'selected' : ''}}" bindtap="setGender" data-val="1">男</view>
+        <view class="radio-item {{form.gender === 0 ? 'selected' : ''}}" bindtap="setGender" data-val="0">女</view>
+      </view>
+    </view>
+    <view class="form-item">
+      <text class="form-label">身高 (cm)</text>
+      <input class="form-input" type="digit" placeholder="请输入身高" value="{{form.height}}" bindinput="onInput" data-field="height" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">体重 (kg)</text>
+      <input class="form-input" type="digit" placeholder="请输入体重" value="{{form.weight}}" bindinput="onInput" data-field="weight" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">活动系数</text>
+      <picker bindchange="onActivityChange" value="{{activityIndex}}" range="{{activityOptions}}">
+        <view class="form-input picker-val">{{activityOptions[activityIndex] || '请选择'}}</view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 健康目标 -->
+  <view class="card">
+    <text class="section-title">健康目标</text>
+    <view class="tag-group">
+      <view wx:for="{{goalOptions}}" wx:key="*this"
+        class="tag-item {{form.health_goal === item ? 'selected' : ''}}"
+        bindtap="setGoal" data-val="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 饮食禁忌 -->
+  <view class="card">
+    <text class="section-title">饮食禁忌与过敏原</text>
+    <view class="tag-group">
+      <view wx:for="{{restrictionOptions}}" wx:key="*this"
+        class="tag-item {{tools.isSelected(form.dietary_restrictions, item) ? 'selected' : ''}}"
+        bindtap="toggleRestriction" data-val="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 口味偏好 -->
+  <view class="card">
+    <text class="section-title">口味偏好 (0-5)</text>
+    <view class="form-item" wx:for="{{tasteKeys}}" wx:key="*this">
+      <text class="form-label">{{item}}</text>
+      <slider min="0" max="5" step="1" value="{{form.taste_preferences[item] || 0}}"
+        bindchange="onTasteChange" data-key="{{item}}" show-value activeColor="#FF6B35" />
+    </view>
+  </view>
+
+  <!-- 菜系偏好 -->
+  <view class="card">
+    <text class="section-title">菜系偏好</text>
+    <view class="tag-group">
+      <view wx:for="{{cuisineOptions}}" wx:key="*this"
+        class="tag-item {{tools.isSelected(form.cuisine_preferences, item) ? 'selected' : ''}}"
+        bindtap="toggleCuisine" data-val="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 忌口食材 -->
+  <view class="card">
+    <text class="section-title">忌口食材</text>
+    <view class="tag-group">
+      <view wx:for="{{avoidOptions}}" wx:key="*this"
+        class="tag-item {{tools.isSelected(form.avoid_foods, item) ? 'selected' : ''}}"
+        bindtap="toggleAvoid" data-val="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
+  <button class="btn-primary" style="margin-top:30rpx" bindtap="saveProfile" loading="{{saving}}">保存画像</button>
+</view>

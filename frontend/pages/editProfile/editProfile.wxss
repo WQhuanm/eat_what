@@ -1,0 +1,21 @@
+.radio-group, .tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.radio-item, .tag-item {
+  padding: 14rpx 30rpx;
+  border: 2rpx solid #ddd;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+.radio-item.selected, .tag-item.selected {
+  background: #FF6B35;
+  color: #fff;
+  border-color: #FF6B35;
+}
+.picker-val {
+  min-height: 40rpx;
+  line-height: 40rpx;
+}

@@ -1,0 +1,56 @@
+.progress-bar {
+  height: 8rpx;
+  background: #eee;
+  border-radius: 4rpx;
+  margin-bottom: 10rpx;
+}
+.progress-fill {
+  height: 100%;
+  background: #FF6B35;
+  border-radius: 4rpx;
+  transition: width 0.3s;
+}
+.progress-text {
+  font-size: 24rpx;
+  color: #999;
+  text-align: right;
+  display: block;
+  margin-bottom: 30rpx;
+}
+.question-card { padding: 40rpx 30rpx; }
+.question-text {
+  font-size: 36rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+.options-list { display: flex; flex-wrap: wrap; gap: 20rpx; }
+.option-item {
+  padding: 20rpx 36rpx;
+  border: 2rpx solid #ddd;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  color: #555;
+  transition: all 0.2s;
+}
+.option-item.selected {
+  background: #FF6B35;
+  color: #fff;
+  border-color: #FF6B35;
+}
+.btn-group {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 50rpx;
+}
+.btn-group button { flex: 1; }
+.btn-secondary {
+  background: #fff;
+  color: #FF6B35;
+  border: 2rpx solid #FF6B35;
+  border-radius: 50rpx;
+  font-size: 32rpx;
+  padding: 24rpx 0;
+}
+.btn-secondary::after { border: none; }

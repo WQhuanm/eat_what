@@ -1,0 +1,47 @@
+page {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 28rpx;
+}
+.container {
+  padding: 30rpx;
+}
+.btn-primary {
+  background-color: #FF6B35;
+  color: #fff;
+  border-radius: 50rpx;
+  font-size: 32rpx;
+  border: none;
+  padding: 24rpx 0;
+  text-align: center;
+}
+.btn-primary::after { border: none; }
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  color: #333;
+}
+.form-item {
+  margin-bottom: 28rpx;
+}
+.form-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+.form-input {
+  border: 1rpx solid #ddd;
+  border-radius: 12rpx;
+  padding: 18rpx 20rpx;
+  font-size: 28rpx;
+  background: #fafafa;
+}

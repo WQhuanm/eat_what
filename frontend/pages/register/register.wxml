@@ -1,0 +1,18 @@
+<view class="container">
+  <view class="card">
+    <text class="section-title">注册账号</text>
+    <view class="form-item">
+      <text class="form-label">用户名</text>
+      <input class="form-input" placeholder="请输入用户名" bindinput="onUsernameInput" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">密码</text>
+      <input class="form-input" type="password" placeholder="请输入密码" bindinput="onPasswordInput" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">确认密码</text>
+      <input class="form-input" type="password" placeholder="再次输入密码" bindinput="onConfirmInput" />
+    </view>
+    <button class="btn-primary" bindtap="onRegister" loading="{{loading}}">注 册</button>
+  </view>
+</view>

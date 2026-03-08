@@ -1,0 +1,7 @@
+.location-text {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-top: 10rpx;
+  text-align: center;
+}

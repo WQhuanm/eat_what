@@ -1,0 +1,20 @@
+<view class="review-page">
+  <view class="title">待审核列表</view>
+
+  <view wx:if="{{items.length === 0}}" class="empty">
+    <text>暂无待审核项</text>
+  </view>
+
+  <view wx:for="{{items}}" wx:key="id" class="review-card card">
+    <view class="review-info">
+      <text class="review-name">{{item.name}}</text>
+      <text class="review-type {{item.type === 'dish' ? 'tag-dish' : 'tag-shop'}}">
+        {{item.type === 'dish' ? '菜品' : '店铺'}}
+      </text>
+    </view>
+    <view class="review-actions">
+      <button size="mini" type="primary" data-id="{{item.id}}" data-type="{{item.type}}" bindtap="approveItem">通过</button>
+      <button size="mini" type="warn" data-id="{{item.id}}" data-type="{{item.type}}" bindtap="rejectItem">拒绝</button>
+    </view>
+  </view>
+</view>

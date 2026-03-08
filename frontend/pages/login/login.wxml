@@ -1,0 +1,24 @@
+<view class="login-page">
+  <view class="logo-area">
+    <text class="logo-text">🍽️ 今天吃什么</text>
+    <text class="sub-text">智能美食推荐</text>
+  </view>
+
+  <view class="form-area card">
+    <view class="form-item">
+      <text class="form-label">用户名</text>
+      <input class="form-input" placeholder="请输入用户名" bindinput="onUsernameInput" value="{{username}}" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">密码</text>
+      <input class="form-input" type="password" placeholder="请输入密码" bindinput="onPasswordInput" value="{{password}}" />
+    </view>
+    <button class="btn-primary" bindtap="onLogin" loading="{{loading}}">登 录</button>
+    <view class="register-link" bindtap="goRegister">
+      <text>还没有账号？立即注册</text>
+    </view>
+    <view class="admin-hint">
+      <text class="hint-text">管理员使用管理员账号登录即可进入审核</text>
+    </view>
+  </view>
+</view>

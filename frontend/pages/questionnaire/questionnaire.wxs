@@ -1,0 +1,12 @@
+function isSelected(selectedMap, key, value) {
+  if (!selectedMap || !selectedMap[key]) return false
+  var arr = selectedMap[key]
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i] === value) return true
+  }
+  return false
+}
+
+module.exports = {
+  isSelected: isSelected
+}

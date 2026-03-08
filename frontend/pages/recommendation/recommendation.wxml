@@ -1,0 +1,26 @@
+<view class="container">
+  <text class="section-title">🎯 为你推荐</text>
+
+  <view wx:if="{{items.length === 0}}" class="empty-tip">
+    <text>暂无合适的推荐，换个条件试试？</text>
+    <button class="btn-primary" style="margin-top:40rpx;width:60%" bindtap="goBack">返回重新选择</button>
+  </view>
+
+  <view class="dish-list">
+    <view class="dish-card card" wx:for="{{items}}" wx:key="dish_id" bindtap="selectDish" data-index="{{index}}">
+      <image class="dish-img" src="{{item.image_url || '/assets/images/default-food.png'}}" mode="aspectFill" />
+      <view class="dish-info">
+        <text class="dish-name">{{item.dish_name}}</text>
+        <view class="dish-meta">
+          <text class="dish-price" wx:if="{{item.price}}">¥{{item.price}}</text>
+          <text class="dish-distance" wx:if="{{item.distance_km}}">📍{{item.distance_km}}km</text>
+          <text class="dish-score">匹配度 {{item.score_pct}}%</text>
+        </view>
+        <text class="dish-shop" wx:if="{{item.shop_name}}">{{item.shop_name}}</text>
+      </view>
+      <view class="choose-btn" catchtap="confirmDish" data-index="{{index}}">
+        就它了!
+      </view>
+    </view>
+  </view>
+</view>

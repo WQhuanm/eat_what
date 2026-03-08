@@ -1,0 +1,21 @@
+<view class="home-page">
+  <view class="hero-area">
+    <text class="hero-emoji">🤔</text>
+    <text class="hero-title">今天吃什么？</text>
+    <text class="hero-desc">让 AI 帮你做选择</text>
+  </view>
+
+  <view class="action-area">
+    <button class="btn-primary big-btn" bindtap="startRecommend">
+      看看今天吃什么 🍜
+    </button>
+  </view>
+
+  <view class="tips card">
+    <text class="section-title">💡 使用提示</text>
+    <text class="tip-text">1. 点击上方按钮开始问答</text>
+    <text class="tip-text">2. 回答几个简单问题</text>
+    <text class="tip-text">3. 获取个性化美食推荐</text>
+    <text class="tip-text">4. 选择心仪的菜品即可</text>
+  </view>
+</view>

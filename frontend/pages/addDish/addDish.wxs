@@ -1,0 +1,8 @@
+function isSelected(array, value) {
+  if (!array) return false
+  return array.indexOf(value) >= 0
+}
+
+module.exports = {
+  isSelected: isSelected
+}

@@ -1,0 +1,22 @@
+<view class="container">
+  <text class="section-title">📋 历史选择</text>
+
+  <view wx:if="{{records.length === 0}}" class="empty-tip">
+    <text>暂无历史记录</text>
+  </view>
+
+  <view class="card history-item" wx:for="{{records}}" wx:key="id">
+    <view class="history-header">
+      <text class="history-dish">{{item.dish_name || '未知菜品'}}</text>
+      <text class="history-tag" wx:if="{{item.is_first_recommendation}}">首推命中</text>
+    </view>
+    <text class="history-time">{{item.dining_time_fmt}}</text>
+    <view class="history-actions">
+      <view class="reselect-btn" bindtap="reSelect" data-index="{{index}}">再来一次</view>
+    </view>
+  </view>
+
+  <view class="load-more" wx:if="{{hasMore}}" bindtap="loadMore">
+    <text>加载更多</text>
+  </view>
+</view>

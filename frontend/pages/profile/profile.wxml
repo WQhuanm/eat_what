@@ -1,0 +1,47 @@
+<view class="container">
+  <view class="user-header card">
+    <view class="avatar-area">
+      <text class="avatar-emoji">👤</text>
+    </view>
+    <text class="user-name">{{username || '未登录'}}</text>
+  </view>
+
+  <view class="menu-list">
+    <view class="menu-item card" bindtap="goEditProfile">
+      <text class="menu-icon">📝</text>
+      <text class="menu-text">编辑个人画像</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item card" bindtap="goAddShop">
+      <text class="menu-icon">🏪</text>
+      <text class="menu-text">添加店铺</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item card" bindtap="goAddDish">
+      <text class="menu-icon">🍳</text>
+      <text class="menu-text">提交菜品信息</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item card" bindtap="goHistory">
+      <text class="menu-icon">📋</text>
+      <text class="menu-text">我的历史记录</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 审核管理入口 -->
+    <view class="menu-item card" wx:if="{{isAdmin}}" bindtap="goReview">
+      <text class="menu-icon">🔍</text>
+      <text class="menu-text">审核管理</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item card logout" bindtap="onLogout">
+      <text class="menu-icon">🚪</text>
+      <text class="menu-text">退出登录</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+</view>

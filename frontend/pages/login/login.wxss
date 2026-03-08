@@ -1,0 +1,33 @@
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 50rpx 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FF6B35 0%, #f5f5f5 50%);
+}
+.logo-area {
+  margin-bottom: 60rpx;
+  text-align: center;
+}
+.logo-text {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+}
+.sub-text {
+  font-size: 28rpx;
+  color: rgba(255,255,255,0.8);
+  margin-top: 10rpx;
+  display: block;
+}
+.form-area {
+  width: 100%;
+}
+.register-link {
+  text-align: center;
+  margin-top: 30rpx;
+  color: #FF6B35;
+  font-size: 26rpx;
+}

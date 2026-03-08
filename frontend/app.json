@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/register/register",
+    "pages/home/home",
+    "pages/review/review",
+    "pages/history/history",
+    "pages/profile/profile",
+    "pages/editProfile/editProfile",
+    "pages/addDish/addDish",
+    "pages/addShop/addShop",
+    "pages/questionnaire/questionnaire",
+    "pages/recommendation/recommendation"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FF6B35",
+    "navigationBarTitleText": "今天吃什么",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F5F5"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#FF6B35",
+    "backgroundColor": "#fff",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "历史",
+        "iconPath": "assets/icons/history.png",
+        "selectedIconPath": "assets/icons/history-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/icons/profile.png",
+        "selectedIconPath": "assets/icons/profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "requiredPrivateInfos": [
+      "chooseAddress",
+      "chooseLocation",
+      "getLocation"
+  ],
+  "permission": {
+      "scope.userLocation": {
+          "desc": "使用定位功能"
+      }
+  }
+}
