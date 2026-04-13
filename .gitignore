@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.playwright
 build/
 develop-eggs/
 dist/
