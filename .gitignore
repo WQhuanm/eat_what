@@ -206,3 +206,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project generated data artifacts
+get_data/.generated/
+backend/.generated/
+
+# Legacy generated outputs (kept ignored)
+get_data/menus_around.json
+get_data/menus_around.csv
+get_data/menus_debug.json
+backend/data/*.json
