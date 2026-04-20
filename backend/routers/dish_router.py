@@ -6,6 +6,8 @@ from database import get_db
 from models import Dish, Shop, User
 from schemas import DishCreate, DishOut, ShopCreate, ShopOut
 from utils import get_current_user
+from vectorize import generate_dish_vector
+from nlp_engine import ModelUnavailableError
 
 router = APIRouter(prefix="/api", tags=["菜品管理"])
 
@@ -56,28 +58,30 @@ def create_dish(body: DishCreate, user: User = Depends(get_current_user), db: Se
     dish = Dish(**body.model_dump(exclude_none=True))
 
     # 调用 NLP 模型生成菜品向量
-    dish.vector = _generate_dish_vector(dish)
+    shop_name = None
+    if dish.shop_id:
+        shop = db.query(Shop).filter(Shop.id == dish.shop_id).first()
+        shop_name = shop.name if shop else None
+
+    try:
+        dish.vector = generate_dish_vector(
+            name=dish.name,
+            cuisine=dish.cuisine,
+            taste_tags=dish.taste_tags,
+            description=dish.description,
+            ingredients=dish.ingredients,
+            city=dish.city,
+            latitude=dish.latitude,
+            longitude=dish.longitude,
+            shop_name=shop_name,
+        )
+    except ModelUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     db.add(dish)
     db.commit()
     db.refresh(dish)
     return dish
-
-
-def _generate_dish_vector(dish: Dish) -> list:
-    """调用 NLP 模型生成菜品向量"""
-    # 假设有一个 NLP 模型服务的 HTTP 接口
-    import requests
-    response = requests.post("http://nlp-service/v1/vectorize", json={
-        "name": dish.name,
-        "description": dish.description,
-        "ingredients": dish.ingredients,
-        "taste_tags": dish.taste_tags,
-    })
-    if response.status_code == 200:
-        return response.json().get("vector", [])
-    return [0] * 768  # 默认返回零向量
-
 
 @router.get("/dishes/{dish_id}", response_model=DishOut)
 def get_dish(dish_id: int, db: Session = Depends(get_db)):

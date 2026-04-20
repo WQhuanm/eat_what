@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import auth_router, profile_router, dish_router, recommend_router, history_router
+from routers import auth_router, profile_router, dish_router, recommend_router, history_router, nlp_router
 import uvicorn
 
-# 自动建表
+# 自动建表（基于 ORM 元数据）
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="eat_what API", version="1.0.0")
@@ -22,6 +22,7 @@ app.include_router(profile_router.router)
 app.include_router(dish_router.router)
 app.include_router(recommend_router.router)
 app.include_router(history_router.router)
+app.include_router(nlp_router.router)
 
 
 @app.get("/")

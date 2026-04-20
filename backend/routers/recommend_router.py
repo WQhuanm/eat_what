@@ -13,6 +13,8 @@ from schemas import (
     RecommendationItem, SelectionConfirm, InteractionLogCreate,
 )
 from utils import get_current_user, gen_uuid, haversine_km, BUDGET_RANGE, TASTE_WEIGHT_MAP
+from vectorize import generate_user_vector
+from nlp_engine import ModelUnavailableError
 
 router = APIRouter(prefix="/api/recommend", tags=["推荐系统"])
 
@@ -59,7 +61,10 @@ def submit_and_recommend(
     candidates: List[Dish] = q.all()
 
     # ----- 向量召回 -----
-    user_vector = _build_user_vector(answers, profile)
+    try:
+        user_vector = _build_user_vector(answers, profile)
+    except ModelUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     candidate_vectors = [np.array(d.vector) for d in candidates if d.vector]
     if not candidate_vectors:
         raise HTTPException(status_code=404, detail="没有符合条件的菜品")
@@ -120,22 +125,20 @@ def submit_and_recommend(
 
 
 def _build_user_vector(answers: QuestionnaireAnswers, profile: UserProfile) -> np.ndarray:
-    """构建用户画像向量"""
-    vector = np.zeros(768)  # 假设向量维度为768
-    weights = answers.instant_weights or {}
+    """构建用户画像向量（与菜品向量同构文本编码）"""
+    answers_dict = answers.model_dump()
+    tastes = profile.taste_preferences if profile and profile.taste_preferences else None
+    cuisines = profile.cuisine_preferences if profile and profile.cuisine_preferences else None
+    avoids = profile.avoid_foods if profile and profile.avoid_foods else None
 
-    # 口味偏好
-    if profile and profile.taste_preferences:
-        for tag, weight in profile.taste_preferences.items():
-            idx = _get_vector_index(tag)  # 映射标签到向量索引
-            vector[idx] += weight
-
-    # 问答权重
-    for tag, weight in weights.items():
-        idx = _get_vector_index(tag)
-        vector[idx] += weight
-
-    return vector / np.linalg.norm(vector) if np.linalg.norm(vector) > 0 else vector
+    vector = generate_user_vector(
+        taste_preferences=tastes,
+        cuisine_preferences=cuisines,
+        avoid_foods=avoids,
+        answers=answers_dict,
+    )
+    arr = np.array(vector, dtype=np.float32)
+    return arr / np.linalg.norm(arr) if np.linalg.norm(arr) > 0 else arr
 
 
 def _get_vector_index(tag: str) -> int:

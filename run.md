@@ -35,6 +35,30 @@
    python -c "import models; from database import Base, engine; Base.metadata.create_all(bind=engine)"
    ```
 
+若你是旧库结构，建议在测试环境重建空表（保留 users 表），再执行自动建表。
+
+店铺/菜品相关重构点：
+
+- `shops.address` 保持 `VARCHAR(255)`
+- 新增 `shops.source_url (TEXT)`
+- 新增 `shops.source_shop_id (UNIQUE)`
+- 新增 `dishes UNIQUE(shop_id, name, price)`
+
+如果需要手动修旧库，可执行：
+
+```sql
+ALTER TABLE shops ADD COLUMN source_url TEXT NULL;
+ALTER TABLE shops ADD COLUMN source_shop_id VARCHAR(64) NULL;
+CREATE UNIQUE INDEX uq_shops_source_shop_id ON shops (source_shop_id);
+CREATE UNIQUE INDEX uq_dish_shop_name_price ON dishes (shop_id, name, price);
+```
+
+说明：
+
+- 本项目使用 SQLAlchemy ORM 元数据自动建表。
+- `Base.metadata.create_all(bind=engine)` 可重复执行，会创建缺失表，不会重复创建已存在表。
+- 若你修改了模型字段，`create_all` 不会自动迁移历史表结构（只负责“创建不存在的表”）。
+
 #### 1.3 启动后端服务
 运行以下命令启动后端服务：
 ```bash
@@ -110,7 +134,120 @@ globalData: {
 2. **小程序合法域名配置**：
    - 在微信公众平台配置后端服务地址为合法域名。
 3. **NLP 模型服务**：
-   - 菜品向量生成依赖 NLP 模型服务，需确保 `http://nlp-service/v1/vectorize` 可用。
+   - 当前后端已内置向量化接口（`/v1/vectorize`），默认不要求独立外部 nlp-service。
+   - 若配置了 `NLP_VECTOR_URL` 指向外部服务，则会优先调用外部服务。
+
+### 3. 向量化服务（本地实现）
+
+后端已内置 `nlp-service` 风格接口，无需额外微服务。
+
+- 接口地址：`POST http://localhost:8000/v1/vectorize`
+- 请求体可直接传 `text`，也可传结构化字段（name/cuisine/taste_tags/taste_scores 等）
+- 优先使用 `sentence-transformers` 模型（默认 `shibing624/text2vec-base-chinese`）
+- 若模型不可用，服务返回 503，拒绝继续向量化与后续写库操作
+
+可通过环境变量调整：
+
+- `NLP_MODEL_NAME`：sentence-transformers 模型名
+- `DISH_VECTOR_DIM`：向量维度（默认 768）
+- `NLP_VECTOR_URL`：若你接入外部向量服务时可覆盖调用地址
+
+#### 1.5 如何让本地模型可用（避免 unavailable）
+
+1. 安装依赖：
+
+```bash
+cd d:\_Project_File\eat_what\backend && pip install -r requirements.txt
+```
+
+2. 预下载模型文件（联网环境执行一次）：
+
+```bash
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('shibing624/text2vec-base-chinese')"
+```
+
+3. 启动后端：
+
+```bash
+python d:\_Project_File\eat_what\backend\main.py
+```
+
+4. 访问接口验证模型状态（Swagger 或 curl/Postman）：
+
+- `POST http://localhost:8000/v1/vectorize`
+- 示例请求体：
+
+```json
+{
+  "text": "菜名:麻婆豆腐\n菜系:川湘菜\n口味标签:辣,咸\n描述:香辣下饭",
+  "vector_dim": 768
+}
+```
+
+5. 判定标准：
+
+- 返回 200 且 `model` 不是 `unavailable`，说明模型可用。
+- 返回 503，说明模型未加载成功（依赖或模型下载问题），系统会拒绝向量化写库。
+
+说明：后端默认使用 `local_files_only=True` 加载模型，不会在运行时自动联网下载，避免启动阻塞。
+
+#### 1.6 菜单抓取→向量化→导入（简化流程）
+
+以下命令覆盖两种场景：当前位置抓取 / 指定经纬度抓取。  
+抓取结果与中间文件统一写入 `get_data/.generated/` 与 `backend/.generated/`（已 Git 忽略）。
+
+1. 抓取菜单（当前位置）
+
+```bash
+cd d:\_Project_File\eat_what\get_data
+python eleme_full_menu_scraper.py --limit 5 --max-dishes-per-shop 30 --timeout-ms 25000
+```
+
+2. 抓取菜单（指定位置，例如杭电）
+
+```bash
+cd d:\_Project_File\eat_what\get_data
+python eleme_full_menu_scraper.py --limit 100 --max-dishes-per-shop 30 --latitude 30.3203 --longitude 120.3501 --timeout-ms 25000
+```
+
+说明：抓取后会生成 `get_data/.generated/menus_meta.json`，记录这批数据来源与定位参数。
+
+若登录态失效，再使用：
+
+```bash
+python eleme_full_menu_scraper.py --manual-login --limit 30 --max-dishes-per-shop 30 --timeout-ms 25000
+```
+
+说明：手动登录成功后，脚本会立即保存登录态到 `get_data/.playwright/eleme_state.json`，并在流程结束时再保存一次，避免中途异常导致登录态丢失。
+
+3. 转换为向量化导入文件（自动读取抓取元数据）
+
+```bash
+cd d:\_Project_File\eat_what\backend
+python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model
+```
+
+如需手动覆盖位置参数，可追加：`--latitude 30.3203 --longitude 120.3501`。  
+`--city` 为可选字段，不影响向量化与导入主流程。
+
+口味标签默认策略说明：
+
+- 不再默认给未知菜品打“咸”标签。
+- 若识别为“饮品甜点”且无显式口味词，默认给“甜”标签与甜味分数。
+
+4. 导入数据库（增量去重）
+
+```bash
+cd d:\_Project_File\eat_what\backend
+python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model --import-db
+```
+
+5. 导入前清空店铺与菜品表（测试重跑）
+
+```bash
+cd d:\_Project_File\eat_what\backend
+python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model --import-db --clear-before-import
+```
 
 ---
 

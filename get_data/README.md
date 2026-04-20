@@ -11,9 +11,10 @@
 ## 2. 关键文件
 
 - `eleme_full_menu_scraper.py`：主脚本（唯一建议运行脚本）
-- `menus_around.json`：主结果（结构化）
-- `menus_around.csv`：扁平化结果（Excel/BI 友好）
-- `menus_debug.json`：调试摘要（成功失败明细、命中接口、菜品计数）
+- `.generated/menus_around.json`：主结果（结构化）
+- `.generated/menus_around.csv`：扁平化结果（Excel/BI 友好）
+- `.generated/menus_debug.json`：调试摘要（成功失败明细、命中接口、菜品计数）
+- `.generated/menus_meta.json`：本批次来源元数据（抓取位置与参数）
 - `.playwright/eleme_state.json`：登录态缓存
 - `temp_artifacts/`：历史调试脚本与中间文件归档
 
@@ -95,6 +96,22 @@ python eleme_full_menu_scraper.py --limit 10 --latitude 31.2304 --longitude 121.
 python eleme_full_menu_scraper.py --limit 10 --strict-limit
 ```
 
+### 7.4 登录态失效时手动登录
+
+```bash
+python eleme_full_menu_scraper.py --manual-login --limit 10 --timeout-ms 20000
+```
+
+脚本会先打开页面并暂停，等你手动登录后在终端按回车继续抓取。
+
+### 7.5 每家仅保留热门菜品
+
+```bash
+python eleme_full_menu_scraper.py --limit 10 --max-dishes-per-shop 30
+```
+
+会按月售优先截断每家菜品，便于控制数据规模。
+
 
 ## 8. 环境要求
 
@@ -121,9 +138,22 @@ python -m playwright install chromium
 
 平台资源可能有时效与风控，建议后处理阶段做一次 URL 探活并缓存可用链接。
 
+### Q3：频繁跳验证页/登录页
+
+新版脚本已优先使用商家卡片 `href` 直达，减少无效页面访问和滚动误触。  
+若仍被风控：
+
+1. 降低 `--limit`（先 5-10 家）
+2. 增加抓取间隔（脚本内已加入基础等待）
+3. 使用 `--manual-login` 完成验证后继续
+
 
 ## 10. 当前版本变更
 
 - 删除了“距离范围筛选”功能（按你的要求移除）
 - 保留并优化了“自动定位 / 显式定位”双模式
 - 保留 `--strict-limit` 作为数量保障开关
+- 新增 `--manual-login`，支持登录态失效后人工登录再继续
+- 新增 `--max-dishes-per-shop`，支持按月售优先保留每家热门菜品
+- 抓取结果默认写入 `get_data/.generated/`（Git 忽略目录）
+- 新增 `--output-meta`，输出抓取元数据，供后续转换脚本复用

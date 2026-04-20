@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, JSON, DateTime, DECIMAL, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, JSON, DateTime, DECIMAL, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -41,6 +41,8 @@ class Shop(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     address = Column(String(255))
+    source_url = Column(Text)
+    source_shop_id = Column(String(64), unique=True, index=True)
     city = Column(String(50), index=True)
     latitude = Column(Float)
     longitude = Column(Float)
@@ -52,6 +54,9 @@ class Shop(Base):
 
 class Dish(Base):
     __tablename__ = 'dishes'
+    __table_args__ = (
+        UniqueConstraint('shop_id', 'name', 'price', name='uq_dish_shop_name_price'),
+    )
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     shop_id = Column(Integer, ForeignKey('shops.id'))
