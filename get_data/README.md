@@ -112,6 +112,16 @@ python eleme_full_menu_scraper.py --limit 10 --max-dishes-per-shop 30
 
 会按月售优先截断每家菜品，便于控制数据规模。
 
+### 7.6 店铺坐标字段
+
+抓取结果中新增：
+
+- `shop_latitude` / `shop_longitude`：店铺坐标（若平台接口可提取）
+- `shop_distance_km`：店铺在列表中的距离文本解析值
+- `shop_address`：店铺地址（若可提取）
+
+后续转换脚本会优先使用店铺自身坐标，不再把整批菜品写成同一个全局坐标。
+
 
 ## 8. 环境要求
 

@@ -1,6 +1,7 @@
 import argparse
 import csv
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -152,6 +153,8 @@ def _menu_from_body_query(payload: dict[str, Any]) -> tuple[list[dict[str, Any]]
             if not image_url and isinstance(image_hash, str) and image_hash:
                 image_url = _image_hash_to_url(image_hash)
 
+            taste_hint = _extract_taste_hint(item)
+
             dishes.append(
                 {
                     "category": gname,
@@ -161,6 +164,7 @@ def _menu_from_body_query(payload: dict[str, Any]) -> tuple[list[dict[str, Any]]
                     "month_sales": (item.get("tipTextList") or [None])[0],
                     "image_url": image_url,
                     "image_hash": image_hash,
+                    "taste_hint": taste_hint,
                 }
             )
 
@@ -191,6 +195,7 @@ def save_csv(path: Path, shops: list[dict[str, Any]]) -> None:
                 "dish_description",
                 "dish_image_url",
                 "dish_image_hash",
+                "dish_taste_hint",
             ],
         )
         writer.writeheader()
@@ -215,8 +220,45 @@ def save_csv(path: Path, shops: list[dict[str, Any]]) -> None:
                         "dish_description": d.get("description", ""),
                         "dish_image_url": d.get("image_url", ""),
                         "dish_image_hash": d.get("image_hash", ""),
+                        "dish_taste_hint": d.get("taste_hint", ""),
                     }
                 )
+
+
+def _flatten_pairs(node: Any) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    if isinstance(node, dict):
+        name = str(node.get("name") or node.get("title") or node.get("key") or "").strip()
+        value = node.get("value") or node.get("text") or node.get("content") or node.get("desc")
+        if name and value is not None:
+            pairs.append((name, str(value).strip()))
+        for v in node.values():
+            pairs.extend(_flatten_pairs(v))
+    elif isinstance(node, list):
+        for x in node:
+            pairs.extend(_flatten_pairs(x))
+    return pairs
+
+
+def _extract_taste_hint(item: dict[str, Any]) -> str:
+    # 1) 先从结构化键值对里找“口味/味道/flavor/taste”
+    pairs = _flatten_pairs(item)
+    hints: list[str] = []
+    for k, v in pairs:
+        lk = k.lower()
+        if ("口味" in k) or ("味道" in k) or ("flavor" in lk) or ("taste" in lk):
+            if v and v not in hints:
+                hints.append(v)
+
+    # 2) 从描述文本中补充提取
+    desc = str(item.get("description") or "")
+    m = re.search(r"口味[:：]\s*([^，。；\n]+)", desc)
+    if m:
+        val = m.group(1).strip()
+        if val and val not in hints:
+            hints.append(val)
+
+    return " / ".join(hints[:3])
 
 
 def _parse_distance_km(raw: str) -> float | None:
@@ -335,6 +377,83 @@ def _build_shop_page_url(href: str) -> str | None:
     if href.startswith("/"):
         return f"https://h5.ele.me{href}"
     return f"https://h5.ele.me/{href}"
+
+
+def _to_float(v: Any) -> float | None:
+    try:
+        if v is None:
+            return None
+        return float(v)
+    except Exception:
+        return None
+
+
+def _valid_cn_coord(lat: float | None, lng: float | None) -> bool:
+    if lat is None or lng is None:
+        return False
+    return 15.0 <= lat <= 55.0 and 70.0 <= lng <= 140.0
+
+
+def _extract_shop_geo_from_payload(payload: dict[str, Any]) -> tuple[float | None, float | None, str | None]:
+    # 优先尝试常见结构路径
+    candidate_paths = [
+        ("data", "storeInfo", "latitude"),
+        ("data", "storeInfo", "longitude"),
+        ("data", "result", "storeInfo", "latitude"),
+        ("data", "result", "storeInfo", "longitude"),
+        ("data", "store", "latitude"),
+        ("data", "store", "longitude"),
+    ]
+
+    def _get_path(d: dict[str, Any], path: tuple[str, ...]) -> Any:
+        cur: Any = d
+        for p in path:
+            if not isinstance(cur, dict) or p not in cur:
+                return None
+            cur = cur[p]
+        return cur
+
+    direct_lat = None
+    direct_lng = None
+    for p in candidate_paths:
+        val = _get_path(payload, p)
+        if p[-1] in {"latitude", "lat"}:
+            direct_lat = direct_lat if direct_lat is not None else _to_float(val)
+        if p[-1] in {"longitude", "lng", "lon"}:
+            direct_lng = direct_lng if direct_lng is not None else _to_float(val)
+
+    addr = None
+    for p in [
+        ("data", "storeInfo", "address"),
+        ("data", "result", "storeInfo", "address"),
+        ("data", "store", "address"),
+    ]:
+        v = _get_path(payload, p)
+        if isinstance(v, str) and v.strip():
+            addr = v.strip()
+            break
+
+    if _valid_cn_coord(direct_lat, direct_lng):
+        return direct_lat, direct_lng, addr
+
+    # 兜底：递归搜索任意含坐标字段的对象
+    stack = [payload]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, dict):
+            lat = _to_float(node.get("latitude") or node.get("lat"))
+            lng = _to_float(node.get("longitude") or node.get("lng") or node.get("lon"))
+            if _valid_cn_coord(lat, lng):
+                if not addr:
+                    a = node.get("address")
+                    if isinstance(a, str) and a.strip():
+                        addr = a.strip()
+                return lat, lng, addr
+            stack.extend(node.values())
+        elif isinstance(node, list):
+            stack.extend(node)
+
+    return None, None, addr
 
 
 def _best_effort_prepare_home(page) -> None:
@@ -602,6 +721,7 @@ def main() -> None:
 
             categories, dishes = _menu_from_body_query(captured["payload"])
             dishes = _pick_top_dishes(dishes, args.max_dishes_per_shop)
+            shop_lat, shop_lng, shop_addr = _extract_shop_geo_from_payload(captured["payload"])
             shop_id = None
             # 优先从 URL 解析 shopId
             if "shopId=" in page.url:
@@ -615,6 +735,10 @@ def main() -> None:
                     "shop_name": shop_name,
                     "shop_id": shop_id,
                     "shop_url": page.url,
+                    "shop_address": shop_addr,
+                    "shop_latitude": shop_lat,
+                    "shop_longitude": shop_lng,
+                    "shop_distance_km": target.get("distance_km"),
                     "category_summary": categories,
                     "menu": dishes,
                 }
