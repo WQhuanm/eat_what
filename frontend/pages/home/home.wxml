@@ -3,11 +3,15 @@
     <text class="hero-emoji">🤔</text>
     <text class="hero-title">今天吃什么？</text>
     <text class="hero-desc">让 AI 帮你做选择</text>
+    <text class="hero-location">{{currentLocationText}}</text>
   </view>
 
   <view class="action-area">
     <button class="btn-primary big-btn" bindtap="startRecommend">
       看看今天吃什么 🍜
+    </button>
+    <button class="btn-secondary big-btn" bindtap="goNearby" style="margin-top:20rpx;">
+      浏览附近美食 📍
     </button>
   </view>
 

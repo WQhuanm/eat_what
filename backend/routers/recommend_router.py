@@ -22,20 +22,28 @@ router = APIRouter(prefix="/api/recommend", tags=["推荐系统"])
 # ---------- 1. 获取问答题目 ----------
 @router.get("/questions", response_model=List[QuestionOption])
 def get_questions():
-    """返回固定的五维问答题目列表"""
+    """返回增强版问答题目列表"""
     return [
-        QuestionOption(question_key="meal_time", question_text="你现在想吃哪一顿？",
-                       options=["早餐", "午餐", "晚餐", "夜宵", "下午茶"]),
-        QuestionOption(question_key="taste_preference", question_text="今天想吃什么口味？",
-                       options=["清爽解腻", "麻辣刺激", "酸甜开胃", "浓郁咸香"], multi_select=True),
-        QuestionOption(question_key="dining_scene", question_text="就餐场景是？",
-                       options=["单人简餐", "双人约会", "团建聚餐", "家庭聚餐"]),
-        QuestionOption(question_key="dining_form", question_text="就餐形式？",
-                       options=["外卖配送", "到店堂食", "打包带走"]),
-        QuestionOption(question_key="budget", question_text="预算大概多少？",
-                       options=["20元以下", "20-50元", "50-100元", "100元以上"]),
-        QuestionOption(question_key="special_state", question_text="有特殊状态吗？（可选）",
-                       options=["无", "需要解压", "正在减脂", "胃不舒服"]),
+        QuestionOption(question_key="meal_time", question_text="当前用餐时段", options=["早餐", "午餐", "下午加餐", "晚餐", "夜宵", "凌晨加餐", "随机/非正餐"]),
+        QuestionOption(question_key="dining_scene", question_text="用餐人数与场景", options=["单人简餐（快速解决）", "单人精致餐（慢食）", "双人约会/小聚", "朋友小聚（3-5人）", "多人聚餐（6人以上）", "家庭日常用餐", "家庭正式聚餐/宴请"]),
+        QuestionOption(question_key="dining_goal", question_text="本次用餐核心目的", options=["简单填饱肚子", "日常家常餐", "享受美味大餐", "解馋/满足欲望", "轻食垫肚子", "解酒/暖胃/安抚肠胃"]),
+        QuestionOption(question_key="decision_style", question_text="本次选择偏好", options=["只吃熟悉口味", "愿意尝试新口味", "优先热门爆款", "无所谓，好吃就行"]),
+        QuestionOption(question_key="dining_form", question_text="用餐形态", options=["正餐主食", "快餐简餐", "小吃点心", "甜品/奶茶/饮品/冰品", "轻食/代餐/水果/养生"]),
+        QuestionOption(question_key="budget", question_text="预算范围", options=["20元以下", "20-50元", "50-100元", "100元以上"]),
+        QuestionOption(question_key="taste_preference", question_text="此刻核心口味倾向", options=["重口过瘾", "清淡本味", "酸甜开胃", "鲜香汤粥", "肉食满足", "奶甜香腻", "酱香卤香", "孜然烧烤"]),
+        QuestionOption(question_key="cuisine_preference", question_text="意向菜系/品类（最多选2项）", options=["川渝", "湘鄂", "粤菜", "江浙本帮", "闽鲜海鲜", "西北风味", "东北菜", "云贵风味", "家常菜", "日韩料理", "东南亚", "清真", "粉面专属", "煲仔/砂锅"], multi_select=True, question_type="multi"),
+        QuestionOption(question_key="ingredient_preference", question_text="核心食材偏好", options=["猪肉类", "牛羊肉类", "鸡鸭禽类", "海鲜/水产/河鲜", "素菜/菌菇/豆制品", "蛋类/奶类", "五谷主食类", "丸子/加工肉制品", "滋补类"]),
+        QuestionOption(question_key="avoid_foods", question_text="饮食忌口（可多选）", options=["忌辛辣", "忌麻", "忌葱/蒜/香菜/芹菜", "忌牛羊肉", "忌海鲜水产", "忌甜食", "忌油腻", "忌油炸", "忌蛋奶", "忌生冷", "素食全素", "清真", "无忌口"], multi_select=True, question_type="multi"),
+        QuestionOption(question_key="spicy_level", question_text="辣度（0-5）", question_type="scale", min_value=0, max_value=5, step=1),
+        QuestionOption(question_key="numbing_level", question_text="麻度（0-5）", question_type="scale", min_value=0, max_value=5, step=1),
+        QuestionOption(question_key="sour_level", question_text="酸度（0-5）", question_type="scale", min_value=0, max_value=5, step=1),
+        QuestionOption(question_key="sweet_level", question_text="甜度（0-5）", question_type="scale", min_value=0, max_value=5, step=1),
+        QuestionOption(question_key="salty_level", question_text="咸度（0-5）", question_type="scale", min_value=0, max_value=5, step=1),
+        QuestionOption(question_key="oily_level", question_text="油度（0-5）", question_type="scale", min_value=0, max_value=5, step=1),
+        QuestionOption(question_key="texture_preference", question_text="口感偏好", options=["酥脆焦香", "劲道弹牙", "软烂脱骨", "脆嫩爽口", "软糯绵密", "丝滑细腻", "多汁水嫩", "干香有嚼劲"]),
+        QuestionOption(question_key="temperature_preference", question_text="食用温度偏好", options=["冷食/常温", "温凉", "温热", "滚烫热食", "可冰可热无所谓"]),
+        QuestionOption(question_key="special_requirements", question_text="特殊场景需求（可选）", question_type="text"),
+        QuestionOption(question_key="special_state", question_text="特殊状态（可选）", options=["无", "需要解压", "正在减脂", "胃不舒服"]),
     ]
 
 
@@ -53,7 +61,7 @@ def submit_and_recommend(
     batch_id = gen_uuid()
 
     # ----- 硬性过滤 -----
-    q = db.query(Dish)
+    q = db.query(Dish).filter(Dish.is_approved == True)
 
     budget_range = BUDGET_RANGE.get(answers.budget, (0, 99999))
     q = q.filter(Dish.price >= budget_range[0], Dish.price <= budget_range[1])
@@ -98,11 +106,14 @@ def submit_and_recommend(
         RecommendationItem(
             dish_id=d.id,
             dish_name=d.name,
-            shop_name=None,
+            shop_name=d.shop.name if d.shop else None,
             price=float(d.price) if d.price else None,
             score=round(min(score, 1.0), 4),
             distance_km=round(dist, 2),
             image_url=d.image_urls[0] if d.image_urls else None,
+            cuisine=d.cuisine,
+            taste_tags=d.taste_tags,
+            description=d.description,
         )
         for d, score, dist in top_n
     ]
@@ -210,6 +221,44 @@ def log_interaction(
     db.add(log)
     db.commit()
     return {"message": "交互已记录"}
+
+
+@router.get("/nearby", response_model=List[RecommendationItem])
+def get_nearby_dishes(
+    latitude: float,
+    longitude: float,
+    radius_km: float = 5.0,
+    limit: int = 30,
+    skip: int = 0,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    dishes = db.query(Dish).filter(Dish.is_approved == True).all()
+    rows = []
+    for d in dishes:
+        if d.latitude is None or d.longitude is None:
+            continue
+        dist = haversine_km(latitude, longitude, d.latitude, d.longitude)
+        if dist <= radius_km:
+            rows.append((d, dist))
+
+    rows.sort(key=lambda x: x[1])
+    rows = rows[skip: skip + limit]
+    return [
+        RecommendationItem(
+            dish_id=d.id,
+            dish_name=d.name,
+            shop_name=d.shop.name if d.shop else None,
+            price=float(d.price) if d.price is not None else None,
+            score=0.0,
+            distance_km=round(dist, 2),
+            image_url=d.image_urls[0] if d.image_urls else None,
+            cuisine=d.cuisine,
+            taste_tags=d.taste_tags,
+            description=d.description,
+        )
+        for d, dist in rows
+    ]
 
 
 # ========== 内部辅助函数 ==========

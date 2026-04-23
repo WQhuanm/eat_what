@@ -1,0 +1,38 @@
+.container {
+  padding: 24rpx;
+}
+
+.detail-card {
+  overflow: hidden;
+}
+
+.dish-img {
+  width: 100%;
+  height: 320rpx;
+  border-radius: 16rpx;
+}
+
+.detail-body {
+  padding: 20rpx 6rpx 6rpx;
+}
+
+.dish-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.shop-name,
+.meta,
+.desc {
+  display: block;
+  color: #666;
+  font-size: 28rpx;
+  margin-top: 8rpx;
+}
+
+.desc {
+  color: #444;
+  line-height: 1.6;
+}

@@ -34,6 +34,13 @@ Page({
 
   loadMore() { this.loadData() },
 
+  goDetail(e) {
+    const record = this.data.records[e.currentTarget.dataset.index]
+    wx.navigateTo({
+      url: '/pages/dishDetail/dishDetail?payload=' + encodeURIComponent(JSON.stringify(record))
+    })
+  },
+
   // 再来一次：基于历史选择重新选择同一菜品
   reSelect(e) {
     const record = this.data.records[e.currentTarget.dataset.index]

@@ -31,6 +31,12 @@
       <text class="menu-arrow">›</text>
     </view>
 
+    <view class="menu-item card" wx:if="{{isAdmin}}" bindtap="goNearbyAdmin">
+      <text class="menu-icon">🗺️</text>
+      <text class="menu-text">管理周边商家（可改定位）</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
     <!-- 审核管理入口 -->
     <view class="menu-item card" wx:if="{{isAdmin}}" bindtap="goReview">
       <text class="menu-icon">🔍</text>

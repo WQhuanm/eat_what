@@ -13,6 +13,9 @@ Page({
     if (cache) {
       const items = (cache.items || []).map(it => ({
         ...it,
+        taste_display: (it.taste_tags || []).filter(Boolean).join(' / '),
+        cuisine: it.cuisine || '',
+        description: it.description || '',
         score_pct: Math.min(100, Math.max(0, Math.round((it.score || 0) * 100)))
       }))
       this.setData({
@@ -28,6 +31,9 @@ Page({
       try { items = JSON.parse(decodeURIComponent(options.items || '[]')) } catch (e) {}
       items = items.map(it => ({
         ...it,
+        taste_display: (it.taste_tags || []).filter(Boolean).join(' / '),
+        cuisine: it.cuisine || '',
+        description: it.description || '',
         score_pct: Math.min(100, Math.max(0, Math.round((it.score || 0) * 100)))
       }))
       this.setData({ batch_id, items })
@@ -55,7 +61,9 @@ Page({
 
           wx.showToast({ title: '已记录选择', icon: 'success' })
           setTimeout(() => {
-            wx.switchTab({ url: '/pages/home/home' })
+            wx.navigateTo({
+              url: '/pages/dishDetail/dishDetail?payload=' + encodeURIComponent(JSON.stringify(dish)) + '&from=confirm'
+            })
           }, 1500)
         } catch (err) {
           wx.showToast({ title: err.message || '记录失败', icon: 'none' })
@@ -79,7 +87,11 @@ Page({
   },
 
   selectDish(e) {
-    // 可扩展：跳转菜品详情
+    const idx = e.currentTarget.dataset.index
+    const item = this.data.items[idx]
+    wx.navigateTo({
+      url: '/pages/dishDetail/dishDetail?payload=' + encodeURIComponent(JSON.stringify(item))
+    })
   },
 
   goBack() {

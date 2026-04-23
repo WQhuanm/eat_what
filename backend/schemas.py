@@ -84,16 +84,34 @@ class DishOut(DishCreate):
 class QuestionOption(BaseModel):
     question_key: str
     question_text: str
-    options: List[str]
+    options: List[str] = []
     multi_select: bool = False
+    question_type: str = "single"  # single/multi/scale/text
+    min_value: Optional[int] = None
+    max_value: Optional[int] = None
+    step: Optional[int] = None
 
 class QuestionnaireAnswers(BaseModel):
-    meal_time: str          # 早餐/午餐/晚餐/夜宵/下午茶
-    taste_preference: List[str]  # 清爽解腻/麻辣刺激/酸甜开胃/浓郁咸香
-    dining_scene: str       # 单人简餐/双人约会/团建聚餐/家庭聚餐
-    dining_form: str        # 外卖配送/到店堂食/打包带走
-    budget: str             # 20元以下/20-50元/50-100元/100元以上
-    special_state: Optional[str] = None  # 需要解压/正在减脂/胃不舒服
+    meal_time: str
+    dining_scene: str
+    dining_goal: str
+    decision_style: str
+    dining_form: str
+    budget: str
+    taste_preference: str
+    cuisine_preference: List[str] = []
+    ingredient_preference: str
+    avoid_foods: List[str] = []
+    spicy_level: int = 0
+    numbing_level: int = 0
+    sour_level: int = 0
+    sweet_level: int = 0
+    salty_level: int = 0
+    oily_level: int = 0
+    texture_preference: Optional[str] = None
+    temperature_preference: Optional[str] = None
+    special_requirements: Optional[str] = None
+    special_state: Optional[str] = None
     follow_up_answers: Optional[Dict[str, str]] = None  # 动态追问的回答
     instant_weights: Optional[Dict[str, float]] = None  # 即时画像权重
 
@@ -107,6 +125,9 @@ class RecommendationItem(BaseModel):
     score: float
     distance_km: Optional[float] = None
     image_url: Optional[str] = None
+    cuisine: Optional[str] = None
+    taste_tags: Optional[List[str]] = None
+    description: Optional[str] = None
 
 class RecommendationResponse(BaseModel):
     batch_id: str
@@ -125,6 +146,14 @@ class HistoryRecordOut(BaseModel):
     id: int
     selected_dish_id: Optional[int]
     dish_name: Optional[str] = None
+    shop_name: Optional[str] = None
+    city: Optional[str] = None
+    distance_km: Optional[float] = None
+    price: Optional[float] = None
+    cuisine: Optional[str] = None
+    taste_tags: Optional[List[str]] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
     dining_time: Optional[datetime]
     question_snapshot: Optional[dict] = None
     is_first_recommendation: Optional[bool] = None

@@ -29,7 +29,16 @@ def get_history(
     result = []
     for r in records:
         out = HistoryRecordOut.model_validate(r)
-        out.dish_name = r.dish.name if r.dish else None
+        if r.dish:
+            out.dish_name = r.dish.name
+            out.price = float(r.dish.price) if r.dish.price is not None else None
+            out.city = r.dish.city
+            out.cuisine = r.dish.cuisine
+            out.taste_tags = r.dish.taste_tags
+            out.description = r.dish.description
+            out.image_url = (r.dish.image_urls or [None])[0]
+            if r.dish.shop:
+                out.shop_name = r.dish.shop.name
         result.append(out)
     return result
 
@@ -49,5 +58,14 @@ def get_history_detail(
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
     out = HistoryRecordOut.model_validate(record)
-    out.dish_name = record.dish.name if record.dish else None
+    if record.dish:
+        out.dish_name = record.dish.name
+        out.price = float(record.dish.price) if record.dish.price is not None else None
+        out.city = record.dish.city
+        out.cuisine = record.dish.cuisine
+        out.taste_tags = record.dish.taste_tags
+        out.description = record.dish.description
+        out.image_url = (record.dish.image_urls or [None])[0]
+        if record.dish.shop:
+            out.shop_name = record.dish.shop.name
     return out

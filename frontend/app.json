@@ -10,7 +10,9 @@
     "pages/addDish/addDish",
     "pages/addShop/addShop",
     "pages/questionnaire/questionnaire",
-    "pages/recommendation/recommendation"
+    "pages/recommendation/recommendation",
+    "pages/dishDetail/dishDetail",
+    "pages/nearby/nearby"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FF6B35",

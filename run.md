@@ -120,11 +120,20 @@ globalData: {
 
 ### 4. 智能推荐
 1. 在首页点击“看看今天吃什么”，进入问答页面。
-2. 完成问答后查看推荐结果，选择心仪的菜品。
+2. 完成增强版问答后提交，系统会将答案转成用户即时向量并召回推荐。
+3. 推荐排序综合向量匹配、距离惩罚、历史平滑。
 
 ### 5. 查看历史记录
 1. 在“我的”页面点击“我的历史记录”。
 2. 查看历史选择记录，点击“再来一次”重新选择。
+
+### 6. 增强版问答字段说明（已实现）
+
+- 题型：单选、多选、滑条（0~5）、文本输入。
+- 核心字段：`meal_time`、`dining_scene`、`dining_goal`、`decision_style`、`dining_form`、`budget`、`taste_preference`、`cuisine_preference`、`ingredient_preference`、`avoid_foods`。
+- 强度字段：`spicy_level`、`numbing_level`、`sour_level`、`sweet_level`、`salty_level`、`oily_level`。
+- 选填字段：`texture_preference`、`temperature_preference`、`special_requirements`、`special_state`。
+- 向量化：后端将上述字段拼接为结构化语义文本，并叠加衍生特征（饱腹度/浓郁度/社交属性）生成用户向量。
 
 ---
 
@@ -234,6 +243,8 @@ python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around
 
 - 不再默认给未知菜品打“咸”标签。
 - 若识别为“饮品甜点”且无显式口味词，默认给“甜”标签与甜味分数。
+- 新增菜系/菜名模板兜底（如“水煮”“酸菜”“蒸”“蛋糕”等），提升口味标签准确率。
+- 转换时优先写入商家自身坐标（若抓取得到），避免整批菜品落同一坐标。
 
 4. 导入数据库（增量去重）
 
@@ -249,12 +260,23 @@ cd d:\_Project_File\eat_what\backend
 python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model --import-db --clear-before-import
 ```
 
+说明：爬虫导入的店铺与菜品默认 `is_approved=true`，审核管理列表仅展示未通过审核的数据。
+
 ---
 
 ## 常见问题
 1. **后端无法连接数据库**：
    - 检查 `DATABASE_URL` 配置是否正确。
    - 确保数据库服务已启动，用户权限正确。
+
+2. **小程序定位获取失败或距离异常**：
+   - 开发阶段也必须显式申请并授权 `scope.userLocation`，不能默认允许。
+   - 需同时满足：
+     - `app.json` 已声明 `permission.scope.userLocation`
+     - 微信开发者工具/真机已开启定位权限
+     - 系统级定位开关已开启
+   - 建议在“附近美食”页面先确认状态文案显示“定位成功（已用于附近商品检索）”。
+   - 若要显示“位置名称”而非经纬度，可在 `frontend/app.js` 配置腾讯地图 Key：`globalData.qqMapKey`。
 2. **小程序无法访问后端**：
    - 检查后端服务是否运行，确保合法域名已配置。
 3. **推荐结果为空**：

@@ -26,6 +26,9 @@ Page({
   goReview() {
     wx.navigateTo({ url: '/pages/review/review' }) // 确保路径正确
   },
+  goNearbyAdmin() {
+    wx.navigateTo({ url: '/pages/nearby/nearby' })
+  },
   onLogout() {
     wx.showModal({
       title: '提示',

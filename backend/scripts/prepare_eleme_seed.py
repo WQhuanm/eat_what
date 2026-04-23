@@ -33,6 +33,92 @@ TASTE_KEYWORDS = {
     "清淡": ["清淡", "原味", "清汤", "蒸", "水煮", "白灼", "养胃"],
 }
 
+DETAILED_TASTE_KEYWORDS = {
+    "麻辣": ["麻辣", "麻辣烫", "麻辣香锅"],
+    "香辣": ["香辣", "红油", "糊辣"],
+    "酸辣": ["酸辣", "泡椒", "剁椒"],
+    "甜辣": ["甜辣"],
+    "藤椒": ["藤椒"],
+    "糖醋": ["糖醋"],
+    "酸甜": ["酸甜", "荔枝味", "茄汁", "番茄"],
+    "咸鲜": ["咸鲜", "鲜香", "鲜"],
+    "清淡": ["清淡", "原味", "白灼", "清蒸", "清汤"],
+    "酱香": ["酱香", "红烧", "卤", "京酱"],
+    "五香": ["五香"],
+    "蒜香": ["蒜香", "蒜蓉", "蒜泥"],
+    "孜然": ["孜然", "烧烤", "焦香"],
+    "咖喱": ["咖喱"],
+    "椒盐": ["椒盐"],
+    "黑椒": ["黑椒"],
+    "奶香": ["奶香", "奶油", "芝士"],
+}
+
+BASE_TAG_FROM_DETAIL = {
+    "麻辣": ["辣", "咸"],
+    "香辣": ["辣", "咸"],
+    "酸辣": ["酸", "辣"],
+    "甜辣": ["甜", "辣"],
+    "藤椒": ["辣", "咸"],
+    "糖醋": ["酸", "甜"],
+    "酸甜": ["酸", "甜"],
+    "咸鲜": ["咸"],
+    "清淡": ["清淡"],
+    "酱香": ["咸"],
+    "五香": ["咸"],
+    "蒜香": ["咸"],
+    "孜然": ["咸", "辣"],
+    "咖喱": ["咸", "辣"],
+    "椒盐": ["咸"],
+    "黑椒": ["咸", "辣"],
+    "奶香": ["甜"],
+}
+
+JIANGZHE_DISH_TASTE_PATTERNS = {
+    "西湖醋鱼": ["酸", "甜"],
+    "东坡肉": ["甜", "咸"],
+    "糖醋": ["酸", "甜"],
+    "红烧": ["甜", "咸"],
+    "油焖": ["甜", "咸"],
+    "清蒸": ["清淡", "咸"],
+    "白灼": ["清淡", "咸"],
+    "葱油": ["咸"],
+    "醉": ["咸"],
+    "酱鸭": ["甜", "咸"],
+    "醉鸡": ["咸"],
+    "杭三鲜": ["咸"],
+    "腌笃鲜": ["咸", "清淡"],
+    "雪菜": ["咸"],
+    "梅干菜": ["咸"],
+}
+
+CUISINE_TASTE_PRIOR = {
+    "川湘菜": ["辣", "咸"],
+    "火锅": ["辣", "咸"],
+    "烧烤": ["咸", "辣"],
+    "粤菜": ["清淡", "甜"],
+    "江浙菜": ["甜", "咸"],
+    "日韩料理": ["咸", "清淡"],
+    "西餐": ["咸"],
+    "快餐便当": ["咸"],
+    "饮品甜点": ["甜"],
+}
+
+NAME_TASTE_PRIOR = {
+    "水煮": ["辣", "咸"],
+    "麻婆": ["辣", "咸"],
+    "香辣": ["辣"],
+    "藤椒": ["辣", "麻"],
+    "酸菜": ["酸", "咸"],
+    "番茄": ["酸", "甜"],
+    "金汤": ["酸", "咸"],
+    "烤": ["咸"],
+    "炸": ["咸"],
+    "蒸": ["清淡"],
+    "粥": ["清淡"],
+    "蛋糕": ["甜"],
+    "奶茶": ["甜"],
+}
+
 INGREDIENT_KEYWORDS = [
     "鸡肉", "牛肉", "羊肉", "猪肉", "鸭肉", "鱼", "虾", "蟹", "贝", "鱿鱼",
     "鸡蛋", "豆腐", "土豆", "番茄", "洋葱", "青椒", "辣椒", "香菜", "葱", "蒜",
@@ -44,6 +130,8 @@ INGREDIENT_KEYWORDS = [
 class DishFeature:
     shop_source_id: str
     shop_name: str
+    shop_latitude: Optional[float]
+    shop_longitude: Optional[float]
     name: str
     description: str
     category: str
@@ -53,6 +141,8 @@ class DishFeature:
     taste_tags: List[str]
     ingredients: List[str]
     image_url: Optional[str]
+    taste_hint: Optional[str]
+    taste_detail: List[str]
 
 
 def parse_args() -> argparse.Namespace:
@@ -113,7 +203,48 @@ def detect_cuisine(*texts: str) -> Optional[str]:
     return "快餐便当"
 
 
-def detect_taste_tags(cuisine: Optional[str], *texts: str) -> List[str]:
+def normalize_taste_hint_to_tags(taste_hint: Optional[str]) -> List[str]:
+    if not taste_hint:
+        return []
+    text = str(taste_hint)
+    tags: List[str] = []
+    mapping = {
+        "酸": ["酸", "酸爽", "酸甜"],
+        "甜": ["甜", "奶香", "果香", "香甜"],
+        "辣": ["辣", "麻辣", "香辣", "微辣", "中辣", "重辣"],
+        "咸": ["咸", "咸香", "鲜香", "鲜"],
+        "清淡": ["清淡", "原味", "不辣", "少油"],
+    }
+    for t, kws in mapping.items():
+        if any(k in text for k in kws):
+            tags.append(t)
+    return tags
+
+
+def extract_detail_taste_tags(taste_hint: Optional[str], *texts: str) -> List[str]:
+    text = " ".join([t for t in [taste_hint, *texts] if t])
+    found: List[str] = []
+    for tag, kws in DETAILED_TASTE_KEYWORDS.items():
+        if any(k in text for k in kws) and tag not in found:
+            found.append(tag)
+    return found
+
+
+def detect_taste_tags(cuisine: Optional[str], taste_hint: Optional[str], *texts: str) -> List[str]:
+    detail_tags = extract_detail_taste_tags(taste_hint, *texts)
+    if detail_tags:
+        base_tags: List[str] = []
+        for dt in detail_tags:
+            for bt in BASE_TAG_FROM_DETAIL.get(dt, []):
+                if bt not in base_tags:
+                    base_tags.append(bt)
+        if base_tags:
+            return base_tags
+
+    hint_tags = normalize_taste_hint_to_tags(taste_hint)
+    if hint_tags:
+        return hint_tags
+
     text = " ".join([t for t in texts if t])
     tags: List[str] = []
     for tag, keywords in TASTE_KEYWORDS.items():
@@ -121,9 +252,29 @@ def detect_taste_tags(cuisine: Optional[str], *texts: str) -> List[str]:
             tags.append(tag)
     if tags:
         return tags
-    if cuisine and "饮品甜点" in cuisine:
-        return ["甜"]
-    return []
+
+    # 菜系兜底
+    if cuisine == "江浙菜":
+        jiangzhe_tags: List[str] = []
+        for k, vals in JIANGZHE_DISH_TASTE_PATTERNS.items():
+            if k in text:
+                for v in vals:
+                    if v in ["酸", "甜", "辣", "咸", "清淡"] and v not in jiangzhe_tags:
+                        jiangzhe_tags.append(v)
+        if jiangzhe_tags:
+            return jiangzhe_tags
+
+    if cuisine in CUISINE_TASTE_PRIOR:
+        return [t for t in CUISINE_TASTE_PRIOR[cuisine] if t in ["酸", "甜", "辣", "咸", "清淡"]]
+
+    # 菜名模板兜底
+    fallback: List[str] = []
+    for k, vals in NAME_TASTE_PRIOR.items():
+        if k in text:
+            for v in vals:
+                if v in ["酸", "甜", "辣", "咸", "清淡"] and v not in fallback:
+                    fallback.append(v)
+    return fallback
 
 
 def detect_ingredients(*texts: str) -> List[str]:
@@ -146,10 +297,11 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
             {
                 "source_shop_id": source_shop_id,
                 "name": shop_name,
-                "address": None,
+                "address": normalize_text(shop.get("shop_address")) or None,
                 "source_url": shop_url or None,
-                "source_shop_id": source_shop_id,
                 "is_approved": True,
+                "latitude": shop.get("shop_latitude"),
+                "longitude": shop.get("shop_longitude"),
             }
         )
 
@@ -160,7 +312,9 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
             description = normalize_text(menu_item.get("description"))
             category = normalize_text(menu_item.get("category"))
             cuisine = detect_cuisine(shop_name, category, dish_name, description)
-            taste_tags = detect_taste_tags(cuisine, category, dish_name, description)
+            taste_hint = normalize_text(menu_item.get("taste_hint"))
+            taste_detail = extract_detail_taste_tags(taste_hint, category, dish_name, description)
+            taste_tags = detect_taste_tags(cuisine, taste_hint, category, dish_name, description)
             ingredients = detect_ingredients(dish_name, description, category)
             raw_price = menu_item.get("price")
             try:
@@ -172,6 +326,8 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
                 DishFeature(
                     shop_source_id=source_shop_id,
                     shop_name=shop_name,
+                    shop_latitude=shop.get("shop_latitude"),
+                    shop_longitude=shop.get("shop_longitude"),
                     name=dish_name,
                     description=description,
                     category=category,
@@ -181,6 +337,8 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
                     taste_tags=taste_tags,
                     ingredients=ingredients,
                     image_url=normalize_text(menu_item.get("image_url")) or None,
+                    taste_hint=taste_hint or None,
+                    taste_detail=taste_detail,
                 )
             )
 
@@ -255,11 +413,12 @@ def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
                 "shop_source_id": feature.shop_source_id,
                 "name": feature.name,
                 "city": args.city,
-                "latitude": args.latitude,
-                "longitude": args.longitude,
+                "latitude": feature.shop_latitude if feature.shop_latitude is not None else args.latitude,
+                "longitude": feature.shop_longitude if feature.shop_longitude is not None else args.longitude,
                 "cuisine": feature.cuisine,
                 "taste_tags": feature.taste_tags,
                 "taste_scores": taste_scores,
+                "taste_detail": feature.taste_detail,
                 "price": feature.price,
                 "calories": None,
                 "protein": None,
@@ -268,6 +427,7 @@ def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
                 "ingredients": feature.ingredients,
                 "image_urls": [feature.image_url] if feature.image_url else [],
                 "description": feature.description,
+                "taste_hint": feature.taste_hint,
                 "dining_forms": ["外卖配送", "打包带走"],
                 "vector": vector,
                 "is_approved": True,
@@ -276,8 +436,8 @@ def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
 
     for shop in shops:
         shop["city"] = args.city
-        shop["latitude"] = args.latitude
-        shop["longitude"] = args.longitude
+        shop["latitude"] = shop.get("latitude") if shop.get("latitude") is not None else args.latitude
+        shop["longitude"] = shop.get("longitude") if shop.get("longitude") is not None else args.longitude
 
     payload = {
         "meta": {

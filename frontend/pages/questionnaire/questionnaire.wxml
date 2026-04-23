@@ -11,7 +11,31 @@
     <text class="question-text">{{questions[currentIndex].question_text}}</text>
 
     <view class="options-list">
+      <view wx:if="{{questions[currentIndex].question_type === 'scale'}}" class="scale-box">
+        <slider
+          min="{{questions[currentIndex].min_value || 0}}"
+          max="{{questions[currentIndex].max_value || 5}}"
+          step="{{questions[currentIndex].step || 1}}"
+          value="{{selectedMap[questions[currentIndex].question_key] ? selectedMap[questions[currentIndex].question_key][0] : 0}}"
+          show-value="true"
+          data-key="{{questions[currentIndex].question_key}}"
+          bindchange="onScaleChange"
+        />
+      </view>
+
+      <view wx:if="{{questions[currentIndex].question_type === 'text'}}" class="text-box">
+        <textarea
+          class="form-input"
+          placeholder="请输入特殊需求（可选）"
+          value="{{selectedMap[questions[currentIndex].question_key] ? selectedMap[questions[currentIndex].question_key][0] : ''}}"
+          data-key="{{questions[currentIndex].question_key}}"
+          bindinput="onTextInput"
+          maxlength="120"
+        />
+      </view>
+
       <view
+        wx:if="{{questions[currentIndex].question_type !== 'scale' && questions[currentIndex].question_type !== 'text'}}"
         wx:for="{{questions[currentIndex].options}}"
         wx:key="*this"
         class="option-item {{tools.isSelected(selectedMap, questions[currentIndex].question_key, item) ? 'selected' : ''}}"

@@ -1,0 +1,14 @@
+<view class="container">
+  <view class="card detail-card" wx:if="{{dish}}">
+    <image class="dish-img" src="{{dish.image_url || '/assets/images/default-food.png'}}" mode="aspectFill" />
+    <view class="detail-body">
+      <text class="dish-name">{{dish.dish_name || dish.name}}</text>
+      <text class="shop-name" wx:if="{{dish.shop_name}}">店铺：{{dish.shop_name}}</text>
+      <text class="meta">价格：{{dish.price ? ('¥' + dish.price) : '未知'}}</text>
+      <text class="meta">菜系：{{dish.cuisine || '未知'}}</text>
+      <text class="meta" wx:if="{{dish.city}}">城市：{{dish.city}}</text>
+      <text class="meta" wx:if="{{dish.taste_display}}">口味：{{dish.taste_display}}</text>
+      <text class="desc" wx:if="{{dish.desc_display}}">口味描述：{{dish.desc_display}}</text>
+    </view>
+  </view>
+</view>

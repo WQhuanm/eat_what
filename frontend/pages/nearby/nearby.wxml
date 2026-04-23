@@ -1,0 +1,32 @@
+<view class="container">
+  <view class="head card">
+    <text class="title">附近商品</text>
+    <text class="sub">按当前位置展示，半径 {{radiusKm}} km</text>
+    <text class="sub" wx:if="{{locationStatus}}">{{locationStatus}}</text>
+    <view wx:if="{{isAdmin}}" class="admin-box">
+      <text class="admin-label">管理员定位（可修改）</text>
+      <text class="admin-place" wx:if="{{adminPlaceName}}">管理位置：{{adminPlaceName}}</text>
+      <text class="admin-place" wx:if="{{showCoords && latitude && longitude}}">坐标：{{latitude.toFixed(6)}}, {{longitude.toFixed(6)}}</text>
+      <button class="admin-btn" size="mini" bindtap="chooseAdminLocation">选择管理位置</button>
+      <button class="admin-btn ghost" size="mini" bindtap="useCurrentLocation" style="margin-top:10rpx;">使用当前位置</button>
+    </view>
+  </view>
+
+  <view wx:if="{{items.length === 0}}" class="empty-tip">
+    <text>附近暂无可展示商品</text>
+  </view>
+
+  <view class="dish-list">
+    <view class="dish-card card" wx:for="{{items}}" wx:key="dish_id" bindtap="goDetail" data-id="{{item.dish_id}}" data-index="{{index}}">
+      <image class="dish-img" src="{{item.image_url || '/assets/images/default-food.png'}}" mode="aspectFill" />
+      <view class="dish-info">
+        <text class="dish-name">{{item.dish_name}}</text>
+        <text class="dish-shop" wx:if="{{item.shop_name}}">{{item.shop_name}}</text>
+        <view class="dish-meta">
+          <text wx:if="{{item.price}}">¥{{item.price}}</text>
+          <text wx:if="{{item.distance_km}}">📍{{item.distance_km}}km</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

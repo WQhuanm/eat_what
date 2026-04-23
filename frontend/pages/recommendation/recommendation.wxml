@@ -17,9 +17,14 @@
           <text class="dish-score">匹配度 {{item.score_pct}}%</text>
         </view>
         <text class="dish-shop" wx:if="{{item.shop_name}}">{{item.shop_name}}</text>
+        <text class="dish-shop" wx:if="{{item.cuisine}}">菜系：{{item.cuisine}}</text>
+        <text class="dish-shop" wx:if="{{item.taste_display}}">口味：{{item.taste_display}}</text>
       </view>
       <view class="choose-btn" catchtap="confirmDish" data-index="{{index}}">
         就它了!
+      </view>
+      <view class="choose-btn" style="margin-top:12rpx;background:#fff3eb;color:#ff6b35;" catchtap="selectDish" data-index="{{index}}">
+        查看详情
       </view>
     </view>
   </view>

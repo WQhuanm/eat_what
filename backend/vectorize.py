@@ -206,18 +206,82 @@ def generate_user_vector(
     tastes = " ".join([f"{k}:{v}" for k, v in (taste_preferences or {}).items()])
     cuisines = ",".join(cuisine_preferences or [])
     avoids = ",".join(avoid_foods or [])
-    taste_pref = ",".join(answers.get("taste_preference", []) or [])
+    taste_pref_raw = answers.get("taste_preference", [])
+    if isinstance(taste_pref_raw, list):
+        taste_pref = ",".join(taste_pref_raw)
+    else:
+        taste_pref = str(taste_pref_raw or "")
+
+    cuisine_pref_raw = answers.get("cuisine_preference", [])
+    if isinstance(cuisine_pref_raw, list):
+        cuisine_pref = ",".join(cuisine_pref_raw)
+    else:
+        cuisine_pref = str(cuisine_pref_raw or "")
+
+    avoid_raw = answers.get("avoid_foods", [])
+    if isinstance(avoid_raw, list):
+        avoid_now = ",".join(avoid_raw)
+    else:
+        avoid_now = str(avoid_raw or "")
+
+    follow_up = answers.get("follow_up_answers", {}) or {}
+    follow_up_text = " ".join([f"{k}:{v}" for k, v in follow_up.items()]) if isinstance(follow_up, dict) else str(follow_up)
+
+    numeric_text = " ".join(
+        [
+            f"辣度:{answers.get('spicy_level', 0)}",
+            f"麻度:{answers.get('numbing_level', 0)}",
+            f"酸度:{answers.get('sour_level', 0)}",
+            f"甜度:{answers.get('sweet_level', 0)}",
+            f"咸度:{answers.get('salty_level', 0)}",
+            f"油度:{answers.get('oily_level', 0)}",
+        ]
+    )
+
+    fullness = "中"
+    form = str(answers.get("dining_form", ""))
+    goal = str(answers.get("dining_goal", ""))
+    scene = str(answers.get("dining_scene", ""))
+    if any(k in form for k in ["正餐", "快餐"]) or any(k in scene for k in ["多人", "家庭"]) or "填饱" in goal:
+        fullness = "高"
+    if any(k in form for k in ["甜品", "轻食", "加餐"]):
+        fullness = "低"
+
+    richness = "中"
+    if any(k in str(answers.get("taste_preference", "")) for k in ["重口", "酱香", "孜然", "肉食"]):
+        richness = "高"
+    if "清淡" in str(answers.get("taste_preference", "")):
+        richness = "低"
+
+    social = "低"
+    if any(k in scene for k in ["多人", "聚餐", "宴请", "约会", "小聚"]):
+        social = "高"
+    elif "家庭" in scene:
+        social = "中"
     text = "\n".join(
         [
             f"用户口味偏好:{tastes}",
             f"用户菜系偏好:{cuisines}",
             f"用户忌口:{avoids}",
             f"当前时段:{answers.get('meal_time', '')}",
+            f"当前场景人数:{answers.get('dining_scene', '')}",
+            f"当前用餐目标:{answers.get('dining_goal', '')}",
+            f"当前决策偏好:{answers.get('decision_style', '')}",
             f"当前口味需求:{taste_pref}",
-            f"当前场景:{answers.get('dining_scene', '')}",
             f"当前就餐形式:{answers.get('dining_form', '')}",
             f"当前预算:{answers.get('budget', '')}",
             f"当前特殊状态:{answers.get('special_state', '')}",
+            f"当前菜系偏好:{cuisine_pref}",
+            f"当前食材偏好:{answers.get('ingredient_preference', '')}",
+            f"当前忌口:{avoid_now}",
+            f"当前口感偏好:{answers.get('texture_preference', '')}",
+            f"当前温度偏好:{answers.get('temperature_preference', '')}",
+            f"当前特殊需求:{answers.get('special_requirements', '')}",
+            f"追问回答:{follow_up_text}",
+            f"强度向量:{numeric_text}",
+            f"衍生饱腹度:{fullness}",
+            f"衍生浓郁度:{richness}",
+            f"衍生社交属性:{social}",
         ]
     )
 

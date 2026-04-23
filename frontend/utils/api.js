@@ -61,4 +61,8 @@ module.exports = {
   // History
   getHistory: (skip, limit) => request(`/api/history?skip=${skip || 0}&limit=${limit || 20}`, 'GET'),
   getHistoryDetail: (id) => request(`/api/history/${id}`, 'GET'),
+
+  // Nearby
+  getNearbyDishes: (lat, lng, radius_km = 5, limit = 30, skip = 0) =>
+    request(`/api/recommend/nearby?latitude=${lat}&longitude=${lng}&radius_km=${radius_km}&limit=${limit}&skip=${skip}`, 'GET'),
 }

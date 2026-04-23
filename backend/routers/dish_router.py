@@ -35,6 +35,7 @@ def list_shops(city: Optional[str] = None, db: Session = Depends(get_db)):
 def list_dishes(
     city: Optional[str] = None,
     cuisine: Optional[str] = None,
+    is_approved: Optional[bool] = None,
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
     skip: int = 0,
@@ -46,6 +47,8 @@ def list_dishes(
         q = q.filter(Dish.city == city)
     if cuisine:
         q = q.filter(Dish.cuisine == cuisine)
+    if is_approved is not None:
+        q = q.filter(Dish.is_approved == is_approved)
     if min_price is not None:
         q = q.filter(Dish.price >= min_price)
     if max_price is not None:

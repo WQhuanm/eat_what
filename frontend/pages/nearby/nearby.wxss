@@ -1,0 +1,90 @@
+.container {
+  padding: 24rpx;
+}
+
+.head {
+  margin-bottom: 20rpx;
+}
+
+.title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.sub {
+  display: block;
+  margin-top: 8rpx;
+  color: #888;
+  font-size: 24rpx;
+}
+
+.admin-box {
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid #f1f1f1;
+}
+
+.admin-label {
+  display: block;
+  color: #ff6b35;
+  font-size: 22rpx;
+  margin-bottom: 10rpx;
+}
+
+.admin-place {
+  display: block;
+  color: #666;
+  font-size: 24rpx;
+  margin-bottom: 10rpx;
+}
+
+.admin-input {
+  border: 1rpx solid #e8e8e8;
+  border-radius: 10rpx;
+  padding: 12rpx;
+  margin-bottom: 8rpx;
+  font-size: 24rpx;
+}
+
+.admin-btn {
+  background: #ff6b35;
+  color: #fff;
+}
+
+.admin-btn.ghost {
+  background: #fff3eb;
+  color: #ff6b35;
+}
+
+.dish-card {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 16rpx;
+}
+
+.dish-img {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 12rpx;
+  margin-right: 16rpx;
+}
+
+.dish-info {
+  flex: 1;
+}
+
+.dish-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.dish-shop,
+.dish-meta {
+  display: block;
+  margin-top: 8rpx;
+  color: #666;
+  font-size: 24rpx;
+}

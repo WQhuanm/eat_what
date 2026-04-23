@@ -12,6 +12,7 @@
     </view>
     <text class="history-time">{{item.dining_time_fmt}}</text>
     <view class="history-actions">
+      <view class="reselect-btn" style="background:#fff3eb;color:#ff6b35;" bindtap="goDetail" data-index="{{index}}">查看详情</view>
       <view class="reselect-btn" bindtap="reSelect" data-index="{{index}}">再来一次</view>
     </view>
   </view>
