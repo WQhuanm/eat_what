@@ -35,7 +35,7 @@
 - 失败原因（`error`）
 
 
-## 4. 定位策略（已调整）
+## 4. 定位策略
 
 ### 4.1 不传定位参数
 
@@ -47,18 +47,12 @@
 - 传入 `--latitude/--longitude` 时，脚本显式设置定位中心。
 - 在权限不稳定或系统定位关闭时，建议显式传参。
 
-示例：
-
-```bash
-python eleme_full_menu_scraper.py --limit 10 --latitude 31.2304 --longitude 121.4737 --timeout-ms 20000
-```
-
 
 ## 5. 商家数量与 `--limit` 逻辑
 
 `--limit` 是目标抓取数量，不是绝对保证值。当前逻辑：
 
-1. 首页滚动收集商家标题（最多多轮滚动）
+1. 首页滚动收集商家标题（多轮滚动）
 2. 逐个点击并抓取菜单
 3. 若个别商家点击失败或菜单接口未命中，实际结果可能少于 `limit`
 
@@ -67,6 +61,8 @@ python eleme_full_menu_scraper.py --limit 10 --latitude 31.2304 --longitude 121.
 - 控制台会输出提示：`目标 X 家，实际抓到 Y 家`
 - 默认继续输出已有结果
 - 若传 `--strict-limit`，则会报错退出（适合自动化流程判失败重试）
+
+`--max-dishes-per-shop` ：每个商家最多获取的菜品数量，会按月售优先截断每家菜品，便于控制数据规模。
 
 
 ## 6. 图片链接说明
@@ -81,36 +77,23 @@ python eleme_full_menu_scraper.py --limit 10 --latitude 31.2304 --longitude 121.
 ### 7.1 常用运行（推荐）
 
 ```bash
-python eleme_full_menu_scraper.py --limit 10 --timeout-ms 20000
+python eleme_full_menu_scraper.py --limit 50 --max-dishes-per-shop 30 --timeout-ms 20000 
 ```
 
 ### 7.2 指定经纬度运行
 
 ```bash
-python eleme_full_menu_scraper.py --limit 10 --latitude 31.2304 --longitude 121.4737 --timeout-ms 20000
-```
-
-### 7.3 严格数量模式
-
-```bash
-python eleme_full_menu_scraper.py --limit 10 --strict-limit
+python eleme_full_menu_scraper.py --limit 50 --max-dishes-per-shop 30 --latitude 31.2304 --longitude 121.4737 --timeout-ms 20000
 ```
 
 ### 7.4 登录态失效时手动登录
 
 ```bash
-python eleme_full_menu_scraper.py --manual-login --limit 10 --timeout-ms 20000
+python eleme_full_menu_scraper.py --manual-login --limit 1 --timeout-ms 20000
 ```
 
 脚本会先打开页面并暂停，等你手动登录后在终端按回车继续抓取。
 
-### 7.5 每家仅保留热门菜品
-
-```bash
-python eleme_full_menu_scraper.py --limit 10 --max-dishes-per-shop 30
-```
-
-会按月售优先截断每家菜品，便于控制数据规模。
 
 ### 7.6 店铺坐标字段
 
@@ -119,8 +102,6 @@ python eleme_full_menu_scraper.py --limit 10 --max-dishes-per-shop 30
 - `shop_latitude` / `shop_longitude`：店铺坐标（若平台接口可提取）
 - `shop_distance_km`：店铺在列表中的距离文本解析值
 - `shop_address`：店铺地址（若可提取）
-
-后续转换脚本会优先使用店铺自身坐标，不再把整批菜品写成同一个全局坐标。
 
 
 ## 8. 环境要求
@@ -132,38 +113,3 @@ python eleme_full_menu_scraper.py --limit 10 --max-dishes-per-shop 30
 ```bash
 python -m playwright install chromium
 ```
-
-
-## 9. 常见问题
-
-### Q1：报“未获取到商家标题”
-
-通常是定位权限或页面状态问题，建议：
-
-1. 打开系统/浏览器定位权限
-2. 先手动确认可在页面看到附近商家
-3. 再运行脚本，必要时加显式经纬度
-
-### Q2：图片链接偶发不可访问
-
-平台资源可能有时效与风控，建议后处理阶段做一次 URL 探活并缓存可用链接。
-
-### Q3：频繁跳验证页/登录页
-
-新版脚本已优先使用商家卡片 `href` 直达，减少无效页面访问和滚动误触。  
-若仍被风控：
-
-1. 降低 `--limit`（先 5-10 家）
-2. 增加抓取间隔（脚本内已加入基础等待）
-3. 使用 `--manual-login` 完成验证后继续
-
-
-## 10. 当前版本变更
-
-- 删除了“距离范围筛选”功能（按你的要求移除）
-- 保留并优化了“自动定位 / 显式定位”双模式
-- 保留 `--strict-limit` 作为数量保障开关
-- 新增 `--manual-login`，支持登录态失效后人工登录再继续
-- 新增 `--max-dishes-per-shop`，支持按月售优先保留每家热门菜品
-- 抓取结果默认写入 `get_data/.generated/`（Git 忽略目录）
-- 新增 `--output-meta`，输出抓取元数据，供后续转换脚本复用

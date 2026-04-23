@@ -14,7 +14,7 @@
 
 #### 1.1 环境依赖
 - **Python**：3.9+
-- **数据库**：MySQL 5.7+ 或 MariaDB
+- **数据库**：MySQL 8.0
 - **依赖库安装**：
   ```bash
   cd backend && pip install -r requirements.txt
@@ -36,22 +36,6 @@
    ```
 
 若你是旧库结构，建议在测试环境重建空表（保留 users 表），再执行自动建表。
-
-店铺/菜品相关重构点：
-
-- `shops.address` 保持 `VARCHAR(255)`
-- 新增 `shops.source_url (TEXT)`
-- 新增 `shops.source_shop_id (UNIQUE)`
-- 新增 `dishes UNIQUE(shop_id, name, price)`
-
-如果需要手动修旧库，可执行：
-
-```sql
-ALTER TABLE shops ADD COLUMN source_url TEXT NULL;
-ALTER TABLE shops ADD COLUMN source_shop_id VARCHAR(64) NULL;
-CREATE UNIQUE INDEX uq_shops_source_shop_id ON shops (source_shop_id);
-CREATE UNIQUE INDEX uq_dish_shop_name_price ON dishes (shop_id, name, price);
-```
 
 说明：
 
@@ -137,15 +121,6 @@ globalData: {
 
 ---
 
-## 注意事项
-1. **后端服务需公网可访问**：
-   - 如果后端部署在本地，需配置内网穿透工具（如 ngrok）或云服务器。
-2. **小程序合法域名配置**：
-   - 在微信公众平台配置后端服务地址为合法域名。
-3. **NLP 模型服务**：
-   - 当前后端已内置向量化接口（`/v1/vectorize`），默认不要求独立外部 nlp-service。
-   - 若配置了 `NLP_VECTOR_URL` 指向外部服务，则会优先调用外部服务。
-
 ### 3. 向量化服务（本地实现）
 
 后端已内置 `nlp-service` 风格接口，无需额外微服务。
@@ -161,7 +136,7 @@ globalData: {
 - `DISH_VECTOR_DIM`：向量维度（默认 768）
 - `NLP_VECTOR_URL`：若你接入外部向量服务时可覆盖调用地址
 
-#### 1.5 如何让本地模型可用（避免 unavailable）
+#### 1.5 如何让本地模型可用
 
 1. 安装依赖：
 
@@ -209,14 +184,14 @@ python d:\_Project_File\eat_what\backend\main.py
 
 ```bash
 cd d:\_Project_File\eat_what\get_data
-python eleme_full_menu_scraper.py --limit 5 --max-dishes-per-shop 30 --timeout-ms 25000
+python eleme_full_menu_scraper.py --limit 50 --max-dishes-per-shop 30 --timeout-ms 25000
 ```
 
 2. 抓取菜单（指定位置，例如杭电）
 
 ```bash
 cd d:\_Project_File\eat_what\get_data
-python eleme_full_menu_scraper.py --limit 100 --max-dishes-per-shop 30 --latitude 30.3203 --longitude 120.3501 --timeout-ms 25000
+python eleme_full_menu_scraper.py --limit 50 --max-dishes-per-shop 30 --latitude 30.3203 --longitude 120.3501 --timeout-ms 25000
 ```
 
 说明：抓取后会生成 `get_data/.generated/menus_meta.json`，记录这批数据来源与定位参数。
@@ -224,7 +199,7 @@ python eleme_full_menu_scraper.py --limit 100 --max-dishes-per-shop 30 --latitud
 若登录态失效，再使用：
 
 ```bash
-python eleme_full_menu_scraper.py --manual-login --limit 30 --max-dishes-per-shop 30 --timeout-ms 25000
+python eleme_full_menu_scraper.py --manual-login --limit 1 --max-dishes-per-shop 1 --timeout-ms 25000
 ```
 
 说明：手动登录成功后，脚本会立即保存登录态到 `get_data/.playwright/eleme_state.json`，并在流程结束时再保存一次，避免中途异常导致登录态丢失。
@@ -235,16 +210,6 @@ python eleme_full_menu_scraper.py --manual-login --limit 30 --max-dishes-per-sho
 cd d:\_Project_File\eat_what\backend
 python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model
 ```
-
-如需手动覆盖位置参数，可追加：`--latitude 30.3203 --longitude 120.3501`。  
-`--city` 为可选字段，不影响向量化与导入主流程。
-
-口味标签默认策略说明：
-
-- 不再默认给未知菜品打“咸”标签。
-- 若识别为“饮品甜点”且无显式口味词，默认给“甜”标签与甜味分数。
-- 新增菜系/菜名模板兜底（如“水煮”“酸菜”“蒸”“蛋糕”等），提升口味标签准确率。
-- 转换时优先写入商家自身坐标（若抓取得到），避免整批菜品落同一坐标。
 
 4. 导入数据库（增量去重）
 
@@ -264,24 +229,3 @@ python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around
 
 ---
 
-## 常见问题
-1. **后端无法连接数据库**：
-   - 检查 `DATABASE_URL` 配置是否正确。
-   - 确保数据库服务已启动，用户权限正确。
-
-2. **小程序定位获取失败或距离异常**：
-   - 开发阶段也必须显式申请并授权 `scope.userLocation`，不能默认允许。
-   - 需同时满足：
-     - `app.json` 已声明 `permission.scope.userLocation`
-     - 微信开发者工具/真机已开启定位权限
-     - 系统级定位开关已开启
-   - 建议在“附近美食”页面先确认状态文案显示“定位成功（已用于附近商品检索）”。
-   - 若要显示“位置名称”而非经纬度，可在 `frontend/app.js` 配置腾讯地图 Key：`globalData.qqMapKey`。
-2. **小程序无法访问后端**：
-   - 检查后端服务是否运行，确保合法域名已配置。
-3. **推荐结果为空**：
-   - 确保数据库中有足够的菜品数据，且菜品信息完整（如向量字段）。
-
----
-
-至此，系统已完整实现并可正常运行。
