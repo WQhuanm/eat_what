@@ -1,0 +1,63 @@
+% 第五章 总结与展望 + 致谢 + 参考文献
+\chapter{总结与展望}
+
+\section{工作总结}
+
+本文围绕"今天吃什么"这个即时决策问题，做了一套微信小程序推荐系统。核心思路是用静态画像记录用户长期偏好（年龄、性别、健康目标、口味禁忌等），再通过问答采集当前场景（时段、预算、人数、身体状态等），把两者结合起来做推荐。推荐流程分三步：先用预算、审核状态和饮食禁忌筛掉不可行的菜品，再用 sentence-transformers 计算用户和菜品的语义相似度召回候选，最后按距离、历史重复度和特殊状态加权排序。系统前端是微信小程序，后端用 FastAPI + SQLAlchemy + MySQL，实现了从注册登录、画像编辑、问答交互到推荐展示、选择确认、历史回看的完整链路。同时用交互日志把曝光、点击、确认和负样本记录下来，方便后续分析。测试下来，主要功能运行正常，场景匹配率能到 80\% 以上。
+
+
+\section{主要特点与创新点}
+
+和常见推荐系统相比，这个小程序有几个不太一样的地方。
+
+首先是"问当前"而不是"翻旧账"。很多推荐系统主要依赖历史购买记录，但餐饮决策变化很快，早上和晚上、身体舒服和不舒服时的需求可能完全不同。所以系统选择通过几个简单问题直接问用户现在的状态，这样即使没有多少历史数据，也能快速给出比较贴合当下场景的推荐。
+
+其次是"先筛后算"。预算够不够、有没有忌口、店离得远不远，这些硬性条件被放在最前面处理，先把明显不合适的结果去掉，再进入语义计算。这样做有两个好处：一是保证推出来的结果是用户真能去买的，二是缩小了计算量，响应会更快。
+
+然后是"轻量语义匹配"。系统把菜品的名称、菜系、口味、食材描述拼成一段文字，用本地的 sentence-transformers 模型转成向量，再和用户画像、问答结果拼接后的向量算相似度。这个方案不需要自己训练大模型，也不依赖外部 API，在毕设的数据规模下完全够用。
+
+最后是"闭环可迭代"。系统不只是推完就结束了，还会记录用户最终选了哪道菜、哪些被展示了但没被点，这些数据可以为以后调整策略提供依据。
+
+\section{存在问题}
+
+系统目前还有一些不够理想的地方。推荐结果虽然能看，但用户不知道"为什么给我推这道菜"——是口味对上了，还是离得近，还是刚好符合养胃需求？缺少解释会降低用户的信任感。另外，系统现在假设用户是一个人吃饭，如果是多人聚餐，不同人的口味和忌口怎么平衡，还没有考虑。还有新用户如果完全不填画像，只靠问答里的几个选项，推荐个性化的程度会差一些，前几轮效果可能不太稳定。
+
+\section{后续展望}
+
+如果以后继续迭代，可以考虑三个方向。一是给每道推荐加一句简单的解释，比如"匹配您的清淡口味""距离较近""适合养胃"，让用户知道推荐理由，提升可信度。二是支持多人模式，每个人填自己的偏好和忌口，后端做一轮偏好合并和禁忌过滤，给出一组兼顾多人的推荐。三是用积累下来的交互日志做点简单的在线学习，比如根据正负样本微调语义相似度和特殊状态加权的系数，让系统随着使用时间越长效果越好。
+
+% ==================== 致谢 ====================
+\clearpage
+\chapter*{致\quad 谢}
+\addcontentsline{toc}{chapter}{致谢}
+
+衷心感谢我的导师潘玉剑老师在本科毕业设计期间给予的悉心指导。从选题方向的确定、系统架构的设计到论文撰写的各个环节，潘老师都提出了宝贵的意见和建议，使我能够顺利完成本课题的研究与实现工作。导师严谨的治学态度、渊博的专业知识和认真负责的工作作风给我留下了深刻的印象，这将使我终身受益。
+
+% ==================== 参考文献 ====================
+\clearpage
+\chapter*{参考文献}
+\addcontentsline{toc}{chapter}{参考文献}
+
+\begin{flushleft}
+\zihao{-4}
+\begin{enumerate}[label={[\arabic*]}, leftmargin=2em, itemsep=0.3em]
+    \item Simon H A. Rational choice and the structure of the environment[J]. Psychological Review, 1956, 63(2): 129-138.
+    \item Sarwar B, Karypis G, Konstan J, et al. Item-based collaborative filtering recommendation algorithms[C]. Proceedings of the 10th International Conference on World Wide Web, 2001: 285-295.
+    \item Pazzani M J, Billsus D. Content-based recommendation systems[C]. The Adaptive Web. Springer, 2007: 325-341.
+    \item Koren Y, Bell R, Volinsky C. Matrix factorization techniques for recommender systems[J]. Computer, 2009, 42(8): 30-37.
+    \item He X, Liao L, Zhang H, et al. Neural collaborative filtering[C]. Proceedings of the 26th International Conference on World Wide Web, 2017: 173-182.
+    \item Kang W C, McAuley J. Self-attentive sequential recommendation[C]. Proceedings of the 2018 IEEE International Conference on Data Mining, 2018: 197-206.
+    \item Adomavicius G, Tuzhilin A. Context-aware recommender systems[C]. Recommender Systems Handbook. Springer, 2015: 191-226.
+    \item Liu Y, Wei W, Sun A, et al. Exploiting geographical neighborhood characteristics for location recommendation[C]. Proceedings of the 23rd ACM International Conference on Information and Knowledge Management, 2014: 739-748.
+    \item Yin H, Zhou X, Cui B, et al. Adapting to user interest drift for POI recommendation[J]. IEEE Transactions on Knowledge and Data Engineering, 2016, 28(10): 2566-2581.
+    \item Zhang S, Yao L, Sun A, et al. Deep learning based recommender system: A survey and new perspectives[J]. ACM Computing Surveys, 2019, 52(1): 1-38.
+    \item Trattner C, Elsweiler D. Food recommender systems: Important contributions, challenges and future research directions[J]. arXiv preprint arXiv:1711.02760, 2017.
+    \item Christakopoulou K, Radlinski F, Hofmann K. Towards conversational recommender systems[C]. Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016: 815-824.
+    \item Zhang Y, Chen X. Explainable recommendation: A survey and new perspectives[J]. Foundations and Trends in Information Retrieval, 2020, 14(1): 1-101.
+    \item Jannach D, Manzoor A, Cai W, et al. A survey on conversational recommender systems[J]. ACM Computing Surveys, 2021, 54(5): 1-36.
+    \item 微信开放平台. 微信小程序开发文档[EB/OL]. https://developers.weixin.qq.com/miniprogram/dev/framework/, 2024.
+    \item Ram{\'i}rez S. FastAPI[EB/OL]. https://fastapi.tiangolo.com/, 2024.
+    \item Devlin J, Chang M W, Lee K, et al. BERT: Pre-training of deep bidirectional transformers for language understanding[C]. Proceedings of NAACL-HLT, 2019: 4171-4186.
+    \item Reimers N, Gurevych I. Sentence-BERT: Sentence embeddings using Siamese BERT-networks[C]. Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing, 2019: 3982-3992.
+\end{enumerate}
+\end{flushleft}

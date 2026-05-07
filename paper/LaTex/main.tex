@@ -1,0 +1,342 @@
+% 杭州电子科技大学本科毕业设计（论文）LaTeX模板
+% 依据学校官方模板格式制作
+\documentclass[a4paper,12pt,oneside,openany]{ctexbook}
+
+% ==================== 页面设置 ====================
+\usepackage{geometry}
+\geometry{
+    top=3cm,                % 对应【页边距】→ 上(T)：3厘米
+    bottom=2cm,             % 对应【页边距】→ 下(B)：2厘米
+    left=3cm,               % 对应【页边距】→ 左(L)：3厘米
+    right=2cm,              % 对应【页边距】→ 右(R)：2厘米
+    bindingoffset=1cm,      % 对应【页边距】→ 装订线(G)：1厘米，位置靠左
+    % 页眉页脚布局（匹配Word【布局】选项卡）
+    includehead,            % 页眉包含在上边距内（和Word原生逻辑完全一致）
+    includefoot,            % 页脚包含在下边距内（和Word原生逻辑完全一致）
+    headheight=15pt,        % 页眉内容固定高度（适配小五号字页眉，足够日常使用）
+    headsep=0.5cm,          % 页眉底部→正文顶部的间距（匹配Word页眉距边界2cm）
+    footskip=0.5cm,         % 正文底部→页脚顶部的间距（匹配Word页脚距边界1cm）
+}
+
+% ==================== 基础宏包 ====================
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage[section]{placeins}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{indentfirst}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{ulem}
+\usepackage{xeCJKfntef}
+
+% ==================== 字体设置 ====================
+% ctex已自动处理中文字体，此处设置英文字体
+\setmainfont{Times New Roman}
+\setCJKmainfont[AutoFakeBold=true]{SimSun} % 宋体，建议加上伪粗体
+% 设置楷体
+\setCJKfamilyfont{kai}[AutoFakeBold=true]{KaiTi} % 楷体
+
+% ==================== 行距与段落 ====================
+% 小四号字(12pt)，行距20磅（Word中行距20磅约等于1.39倍）
+\setstretch{1.39}
+\setlength{\parindent}{2em}
+
+% ==================== hyperref（必须最后加载） ====================
+\usepackage[
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue,
+    bookmarks=true,
+    bookmarksnumbered=true,
+    unicode=true,
+    pdftitle={基于用户画像与问答引导的“今天吃什么”智能推荐微信小程序设计},
+    pdfauthor={作者姓名}
+]{hyperref}
+
+% ==================== 页眉页脚 ====================
+\pagestyle{fancy}
+\fancyhf{}
+% 页眉：杭州电子科技大学本科毕业设计（论文），小五号宋体居中（9pt）
+\fancyhead[C]{\zihao{-5} \songti 杭州电子科技大学本科毕业设计（论文）}
+% 页脚：- 页码 -，五号Times居中
+\fancyfoot[C]{\zihao{5} \normalfont -\thinspace\thepage\thinspace-}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% 章节起始页也使用fancy样式
+\fancypagestyle{plain}{
+\fancyhf{}
+\fancyhead[C]{\zihao{-5} \songti 杭州电子科技大学本科毕业设计（论文）}
+\fancyfoot[C]{\zihao{5} \normalfont -\thinspace\thepage\thinspace-}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+}
+
+% 页面样式：只有页眉，无页脚（用于目录）
+\fancypagestyle{tocstyle}{
+\fancyhf{}
+\fancyhead[C]{\zihao{-5} \songti 杭州电子科技大学本科毕业设计（论文）}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+}
+
+% ==================== 标题格式设置 ====================
+% 一级标题：黑体三号居中，段前0.5行（从页眉下方开始），段后2行
+\ctexset{
+chapter = {
+format = \zihao{3}\heiti\centering,
+beforeskip = 0.5\baselineskip,
+afterskip = 2\baselineskip,
+pagestyle = plain,
+}
+}
+
+% 二级标题：黑体四号，靠左顶格，段前段后减少留白
+\titleformat{\section}
+{\zihao{4}\heiti}
+{\thesection}
+{1em}
+{}
+\titlespacing*{\section}{0pt}{0.5\baselineskip}{0.3\baselineskip}
+
+% 三级标题：黑体小四号，靠左顶格，段前段后减少留白
+\titleformat{\subsection}
+{\zihao{-4}\heiti}
+{\thesubsection}
+{1em}
+{}
+\titlespacing*{\subsection}{0pt}{0.3\baselineskip}{0.2\baselineskip}
+
+% ==================== 目录格式 ====================
+\renewcommand{\cftchapfont}{\zihao{-4}\songti}
+\renewcommand{\cftsecfont}{\zihao{-4}\songti}
+\renewcommand{\cftsubsecfont}{\zihao{-4}\songti}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftchappagefont}{\zihao{-4}}
+\renewcommand{\cftsecpagefont}{\zihao{-4}}
+\renewcommand{\cftsubsecpagefont}{\zihao{-4}}
+\setlength{\cftbeforechapskip}{0.1\baselineskip}
+\setlength{\cftbeforesecskip}{0pt}
+\setlength{\cftbeforesubsecskip}{0pt}
+
+% ==================== 图表标题格式 ====================
+\captionsetup{
+    font={small},
+    labelfont={small},
+    textfont={small},
+    labelsep=quad,
+    skip=0.5\baselineskip
+}
+\captionsetup[figure]{name={图}}
+\captionsetup[table]{name={表}}
+
+% ==================== 代码列表格式 ====================
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{codecomment}{RGB}{0,128,0}
+\definecolor{codestring}{RGB}{163,21,21}
+\definecolor{codekeyword}{RGB}{0,0,255}
+
+\lstset{
+    language=Python,
+    basicstyle=\zihao{5}\ttfamily,
+    keywordstyle=\color{codekeyword}\bfseries,
+    stringstyle=\color{codestring},
+    commentstyle=\color{codecomment}\itshape,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=4,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    aboveskip=1\baselineskip,
+    belowskip=1\baselineskip,
+    captionpos=b
+}
+
+% ==================== 参考文献格式 ====================
+\makeatletter
+\renewcommand{\@biblabel}[1]{[#1]\hfill}
+\makeatother
+
+% 定义上标引用命令
+\newcommand{\super}[1]{\textsuperscript{#1}}
+
+% ==================== 封面环境 ====================
+\newenvironment{coverpage}{
+    \clearpage
+    \thispagestyle{empty}
+    \zihao{4}
+}{\clearpage}
+
+% ==================== 文档开始 ====================
+\begin{document}
+
+% 全局设置前置部分为empty样式（封面、诚信承诺无页眉页脚）
+\pagestyle{empty}
+
+% ========== 封面 ==========
+\thispagestyle{empty}
+\begin{center}
+% 学校名称图片
+\vspace*{1cm}
+\centerline{
+  \hspace{-1.3cm} % 这里的数值控制左移量，可按需微调
+  \includegraphics[width=9.83cm,height=1.4cm,keepaspectratio]{images/school_title.png}
+}
+
+\vspace{1cm}
+
+% 本科毕业设计（论文）- 35pt（约小一号），宋体，加粗
+{\fontsize{35pt}{36pt}\songti\textbf{本科毕业设计（论文）}}
+
+\vspace{0.5cm}
+
+% （2026届）- 小二或二号，宋体，加粗
+{\zihao{2}\songti\textbf{（2026届）}}
+
+\vspace{1cm}
+
+% 封面信息表格 - 标签：宋体小三加粗，内容：楷体小三不加粗
+\renewcommand{\arraystretch}{1.8}
+\begin{tabular}{@{}>{\zihao{-3}\bfseries\songti}r >{\zihao{-3}\kaishu}l@{}}
+题\qquad 目 &
+\CJKunderline{%
+\parbox[b]{9cm}{
+\centering
+基于用户画像与问答引导的“今天吃什\\
+么”智能推荐微信小程序设计
+}%
+} \\[0.15cm]
+学\qquad 院 & \CJKunderline{\makebox[9cm][c]{计算机学院}} \\[0.15cm]
+专\qquad 业 & \CJKunderline{\makebox[9cm][c]{计算机科学与技术}} \\[0.15cm]
+班\qquad 级 & \CJKunderline{\makebox[9cm][c]{22052320}} \\[0.15cm]
+学\qquad 号 & \CJKunderline{\makebox[9cm][c]{22051009}} \\[0.15cm]
+学生姓名 & \CJKunderline{\makebox[9cm][c]{蔡炜权}} \\[0.15cm]
+指导教师 & \CJKunderline{\makebox[9cm][c]{潘玉剑}} \\[0.15cm]
+完成日期 & \CJKunderline{\makebox[9cm][c]{2026年4月}} \\
+\end{tabular}
+
+\vfill
+\end{center}
+\clearpage
+
+% ========== 诚信承诺书 ==========
+\newpage
+\thispagestyle{empty}
+\begin{center}
+\vspace*{3.5cm}
+
+% 标题：小二号字，黑体，加粗，字间空两个全角空格
+{\zihao{-2}\heiti\textbf{诚\quad 信\quad 承\quad 诺}}
+
+\vspace{0.5cm}
+\end{center}
+
+% 正文：四号字，宋体，不加粗
+\zihao{4}\songti
+\setlength{\parindent}{2em}
+我谨在此承诺：本人所写的毕业论文《\uline{\hspace{0.3em}基于用户画像与问答引导的“今天吃什么”智能推荐微信小程序设计\hspace{0.3em}}》均系本人独立完成，没有抄袭行为，凡涉及其他作者的观点和材料，均作了注释，若有不实，后果由本人承担。
+
+\vspace{1cm}
+
+% 签名部分：小三号字，黑体加粗标签，宋体日期
+\begin{flushright}
+\zihao{-3}\songti
+\setlength{\parindent}{0em}
+{\heiti\textbf{承诺人（签名）：}}\CJKunderline{\makebox[5cm]{}}
+
+\vspace{1cm}
+
+{\songti 2026年 5月 12日}
+\end{flushright}
+\clearpage
+
+% ========== 中文摘要 ==========
+\clearpage
+\thispagestyle{tocstyle} % 使用带页眉的样式
+
+\begin{center}
+\vspace*{-0.5\baselineskip}
+{\zihao{3}\heiti 摘\quad 要}
+\end{center}
+% 摘要不加入目录
+\zihao{-4}\songti
+
+高校及周边的餐饮选择看似丰富，实际上候选太多反而让人犹豫不决，尤其是时间紧、预算有限或者身体状态特殊的时候。本文设计了一款微信小程序，通过几个简单问题了解用户当下的用餐场景（时段、预算、人数、口味、身体状态等），再结合用户填写的长期画像（健康目标、饮食禁忌、口味偏好等），给出可执行的菜品推荐。
+
+推荐过程先按预算、审核状态和忌口过滤掉不可行的选项，再用 sentence-transformers 模型计算用户和菜品的语义相似度，最后综合距离、历史重复度和特殊状态等因素排序。系统前端是微信小程序，后端基于 FastAPI 和 MySQL 构建，支持完整的注册登录、画像编辑、问答交互、推荐展示、选择确认和历史回看流程。测试表明，系统能在较短时间内返回符合当前场景的推荐结果，预算控制、饮食禁忌过滤和地理位置约束都执行得比较到位。
+
+\vspace{\baselineskip}
+\noindent\textbf{\heiti\zihao{-4}关键词：}{\zihao{-4}\songti 智能推荐；用户画像；问答引导；微信小程序；餐饮推荐}
+
+% ========== 英文摘要 ==========
+\clearpage
+\thispagestyle{tocstyle} % 使用带页眉的样式
+\begin{center}
+\vspace*{-0.5\baselineskip}
+{\zihao{3}\bfseries ABSTRACT}
+\end{center}
+% ABSTRACT不加入目录
+\zihao{-4}\normalfont
+
+In campus and surrounding areas, choosing what to eat appears easy due to abundant options, yet the large candidate pool often leads to decision paralysis, especially when users are short on time, have a tight budget, or face special physical conditions. This thesis presents a WeChat Mini Program that asks a few lightweight questions about the current dining context (meal time, budget, number of diners, taste preference, physical state) and combines them with the user's long-term profile (health goals, dietary restrictions, taste preferences) to generate actionable dish recommendations.
+
+The recommendation pipeline consists of three stages: hard filtering first removes dishes that violate budget, approval status, or dietary taboos; semantic recall then computes cosine similarity between user and dish vectors generated by a local sentence-transformers model; finally, a re-ranking stage fuses semantic similarity, distance penalty, and history smoothing to balance relevance, accessibility, and diversity. The backend is built with FastAPI and MySQL, while the frontend is a WeChat Mini Program supporting registration, profile editing, questionnaire-based recommendation, result confirmation, and history review. Experimental results show that the system returns context-consistent recommendations within acceptable latency, with budget compliance, dietary constraints, and geographical accessibility all performing well.
+
+\vspace{\baselineskip}
+\noindent\textbf{\zihao{-4} Keywords: }{\zihao{-4} recommender system; user profile; questionnaire guidance; WeChat Mini Program; food recommendation}
+
+% ========== 目录 ==========
+\clearpage
+\thispagestyle{tocstyle} % 使用目录专用样式（有页眉无页脚）
+\begin{center}
+\vspace*{-0.5\baselineskip}
+{\zihao{3}\heiti 目\quad 录}
+\vspace*{-4\baselineskip}
+\end{center}
+
+% 取消\tableofcontents自动生成的标题
+\renewcommand{\contentsname}{} 
+\zihao{-4}
+\tableofcontents
+\clearpage
+
+% ========== 正文：页眉+页码 ==========
+\pagestyle{fancy}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ========== 正文各章 ==========
+\input{chapter1}
+\input{chapter2}
+\input{chapter3}
+\input{chapter4}
+\input{chapter5}
+
+% ========== 附录 ==========
+\input{appendix}
+
+\end{document}
