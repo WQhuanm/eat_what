@@ -65,4 +65,8 @@ module.exports = {
   // Nearby
   getNearbyDishes: (lat, lng, radius_km = 5, limit = 30, skip = 0) =>
     request(`/api/recommend/nearby?latitude=${lat}&longitude=${lng}&radius_km=${radius_km}&limit=${limit}&skip=${skip}`, 'GET'),
+  getNearbyShops: (lat, lng, radius_km = 5, limit = 30, skip = 0) =>
+    request(`/api/recommend/nearby-shops?latitude=${lat}&longitude=${lng}&radius_km=${radius_km}&limit=${limit}&skip=${skip}`, 'GET'),
+  getShopDishes: (shopId) =>
+    request(`/api/recommend/shop/${shopId}/dishes`, 'GET'),
 }

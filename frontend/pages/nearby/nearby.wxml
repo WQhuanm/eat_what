@@ -1,31 +1,58 @@
 <view class="container">
   <view class="head card">
-    <text class="title">附近商品</text>
+    <text class="title">附近美食</text>
     <text class="sub">按当前位置展示，半径 {{radiusKm}} km</text>
     <text class="sub" wx:if="{{locationStatus}}">{{locationStatus}}</text>
-    <view wx:if="{{isAdmin}}" class="admin-box">
-      <text class="admin-label">管理员定位（可修改）</text>
-      <text class="admin-place" wx:if="{{adminPlaceName}}">管理位置：{{adminPlaceName}}</text>
-      <text class="admin-place" wx:if="{{showCoords && latitude && longitude}}">坐标：{{latitude.toFixed(6)}}, {{longitude.toFixed(6)}}</text>
-      <button class="admin-btn" size="mini" bindtap="chooseAdminLocation">选择管理位置</button>
-      <button class="admin-btn ghost" size="mini" bindtap="useCurrentLocation" style="margin-top:10rpx;">使用当前位置</button>
+    
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-item {{tab === 'dishes' ? 'active' : ''}}" bindtap="switchTab" data-tab="dishes">
+        附近菜品
+      </view>
+      <view class="tab-item {{tab === 'shops' ? 'active' : ''}}" bindtap="switchTab" data-tab="shops">
+        附近商家
+      </view>
     </view>
   </view>
 
-  <view wx:if="{{items.length === 0}}" class="empty-tip">
-    <text>附近暂无可展示商品</text>
+  <!-- 菜品列表 -->
+  <view wx:if="{{tab === 'dishes'}}">
+    <view wx:if="{{items.length === 0}}" class="empty-tip">
+      <text>附近暂无可展示菜品</text>
+    </view>
+
+    <view class="dish-list">
+      <view class="dish-card card" wx:for="{{items}}" wx:key="dish_id" bindtap="goDetail" data-id="{{item.dish_id}}" data-index="{{index}}">
+        <image class="dish-img" src="{{item.image_url || '/assets/images/default-food.png'}}" mode="aspectFill" />
+        <view class="dish-info">
+          <text class="dish-name">{{item.dish_name}}</text>
+          <text class="dish-shop" wx:if="{{item.shop_name}}">{{item.shop_name}}</text>
+          <view class="dish-meta">
+            <text wx:if="{{item.price}}">¥{{item.price}}</text>
+            <text wx:if="{{item.distance_km}}">📍{{item.distance_km}}km</text>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 
-  <view class="dish-list">
-    <view class="dish-card card" wx:for="{{items}}" wx:key="dish_id" bindtap="goDetail" data-id="{{item.dish_id}}" data-index="{{index}}">
-      <image class="dish-img" src="{{item.image_url || '/assets/images/default-food.png'}}" mode="aspectFill" />
-      <view class="dish-info">
-        <text class="dish-name">{{item.dish_name}}</text>
-        <text class="dish-shop" wx:if="{{item.shop_name}}">{{item.shop_name}}</text>
-        <view class="dish-meta">
-          <text wx:if="{{item.price}}">¥{{item.price}}</text>
-          <text wx:if="{{item.distance_km}}">📍{{item.distance_km}}km</text>
+  <!-- 商家列表 -->
+  <view wx:if="{{tab === 'shops'}}">
+    <view wx:if="{{shops.length === 0}}" class="empty-tip">
+      <text>附近暂无商家</text>
+    </view>
+
+    <view class="shop-list">
+      <view class="shop-card card" wx:for="{{shops}}" wx:key="shop_id" bindtap="goShopDetail" data-id="{{item.shop_id}}">
+        <view class="shop-info">
+          <text class="shop-name">{{item.shop_name}}</text>
+          <text class="shop-address" wx:if="{{item.address}}">{{item.address}}</text>
+          <view class="shop-meta">
+            <text>{{item.dish_count}} 个菜品</text>
+            <text wx:if="{{item.distance_km}}">📍{{item.distance_km}}km</text>
+          </view>
         </view>
+        <text class="arrow">></text>
       </view>
     </view>
   </view>

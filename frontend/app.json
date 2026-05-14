@@ -12,6 +12,7 @@
     "pages/questionnaire/questionnaire",
     "pages/recommendation/recommendation",
     "pages/dishDetail/dishDetail",
+    "pages/shopDetail/shopDetail",
     "pages/nearby/nearby"
   ],
   "window": {

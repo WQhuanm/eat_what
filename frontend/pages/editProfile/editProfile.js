@@ -7,17 +7,16 @@ Page({
     form: {
       age: null, gender: null, height: null, weight: null,
       activity_factor: null, health_goal: '',
-      dietary_restrictions: [], taste_preferences: {},
+      taste_preferences: {},
       cuisine_preferences: [], avoid_foods: []
     },
     activityIndex: 0,
     activityOptions: ['久坐 (1.2)', '轻度活动 (1.375)', '中度活动 (1.55)', '高强度 (1.725)'],
     activityValues: [1.2, 1.375, 1.55, 1.725],
-    goalOptions: ['减脂', '增肌', '维持现状', '养生饮食'],
-    restrictionOptions: ['清真', '纯素食', '蛋奶素食', '花生', '海鲜', '乳糖', '麸质'],
+    goalOptions: ['减脂', '增肌', '维持现状'],
     tasteKeys: ['酸', '甜', '苦', '辣', '咸'],
-    cuisineOptions: ['川湘菜', '江浙菜', '日韩料理', '西餐', '快餐便当', '粤菜', '东北菜'],
-    avoidOptions: ['香菜', '葱', '蒜', '姜', '动物内脏', '芹菜', '胡萝卜']
+    cuisineOptions: ['烧烤烤肉', '奶茶果汁', '炸鸡炸串', '鸭脖卤味', '特色小吃', '米粉面条', '快餐便当', '汉堡薯条', '粥食点心', '地方菜系', '麻辣烫冒菜', '饺子馄饨'],
+    avoidOptions: ['清真（不吃猪肉）', '素食', '花生过敏', '海鲜过敏', '乳糖不耐', '不吃香菜', '不吃葱/蒜', '不吃辣', '不吃油腻']
   },
 
   async onLoad() {
@@ -33,7 +32,6 @@ Page({
           weight: profile.weight,
           activity_factor: profile.activity_factor,
           health_goal: profile.health_goal || '',
-          dietary_restrictions: profile.dietary_restrictions || [],
           taste_preferences: profile.taste_preferences || {},
           cuisine_preferences: profile.cuisine_preferences || [],
           avoid_foods: profile.avoid_foods || []
@@ -68,14 +66,6 @@ Page({
     this.setData({ 'form.health_goal': e.currentTarget.dataset.val })
   },
 
-  toggleRestriction(e) {
-    const val = e.currentTarget.dataset.val
-    let arr = [...this.data.form.dietary_restrictions]
-    const idx = arr.indexOf(val)
-    idx >= 0 ? arr.splice(idx, 1) : arr.push(val)
-    this.setData({ 'form.dietary_restrictions': arr })
-  },
-
   onTasteChange(e) {
     const key = e.currentTarget.dataset.key
     this.setData({ [`form.taste_preferences.${key}`]: e.detail.value })
@@ -106,7 +96,6 @@ Page({
       weight: f.weight ? Number(f.weight) : null,
       activity_factor: f.activity_factor,
       health_goal: f.health_goal || null,
-      dietary_restrictions: f.dietary_restrictions,
       taste_preferences: f.taste_preferences,
       cuisine_preferences: f.cuisine_preferences,
       avoid_foods: f.avoid_foods

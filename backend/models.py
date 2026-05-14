@@ -27,11 +27,10 @@ class UserProfile(Base):
     height = Column(Float)   # cm
     weight = Column(Float)   # kg
     activity_factor = Column(Float)  # 1.2/1.375/1.55/1.725
-    health_goal = Column(String(20))  # 减脂/增肌/维持现状/养生饮食
-    dietary_restrictions = Column(JSON)  # ["清真","纯素食","蛋奶素食","花生","海鲜","乳糖","麸质"]
+    health_goal = Column(String(20))  # 减脂/增肌/维持现状
     taste_preferences = Column(JSON)  # {"酸":3,"甜":4,"苦":1,"辣":5,"咸":2}
-    cuisine_preferences = Column(JSON)  # ["川湘菜","江浙菜","日韩料理","西餐","快餐便当"]
-    avoid_foods = Column(JSON)  # ["香菜","葱","蒜","姜","动物内脏"]
+    cuisine_preferences = Column(JSON)  # ["烧烤烤肉","奶茶果汁","快餐便当"]
+    avoid_foods = Column(JSON)  # 统合忌口：["清真","素食","花生","海鲜","香菜","葱","蒜","辣","油腻"]
 
     user = relationship("User", back_populates="profile")
 
@@ -65,15 +64,19 @@ class Dish(Base):
     longitude = Column(Float)
     cuisine = Column(String(50))  # 菜系
     taste_tags = Column(JSON)     # ["酸","辣"]
+    taste_scores = Column(JSON)   # {"酸":0.0,"甜":0.0,"辣":5.0,"咸":4.0,"清淡":0.0,"苦":0.0}
+    taste_detail = Column(JSON)   # ["麻辣","咸鲜"]
     price = Column(DECIMAL(10, 2))
-    calories = Column(Float)      # kcal
-    protein = Column(Float)       # g
-    fat = Column(Float)           # g
-    carbohydrate = Column(Float)  # g
     ingredients = Column(JSON)    # ["猪肉","辣椒","大蒜"]
     image_urls = Column(JSON)     # 宣传图片URL列表
     description = Column(Text)    # 口味描述
-    dining_forms = Column(JSON)   # ["外卖配送","到店堂食","打包带走"]
+    shop_specialties = Column(JSON)  # ["肉夹馍","凉皮","油泼面"]
+    shop_taste_context = Column(JSON) # ["咸","辣"]
+    shop_scene = Column(String(50))   # 正餐/夜宵/早餐/下午茶
+    # 位置信息自动从商家继承（用于推荐距离计算）
+    city = Column(String(50), index=True)
+    latitude = Column(Float)
+    longitude = Column(Float)
     vector = Column(JSON)         # 768维菜品嵌入向量
     is_approved = Column(Boolean, default=False)  # 是否通过审核
 

@@ -28,8 +28,21 @@
 .options-list { display: flex; flex-wrap: wrap; gap: 20rpx; }
 
 .scale-box,
-.text-box {
+.text-box,
+.multi-scale-box {
   width: 100%;
+}
+
+.sub-scale-item {
+  width: 100%;
+  margin-bottom: 30rpx;
+}
+
+.sub-scale-label {
+  font-size: 30rpx;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
 }
 
 .text-box .form-input {

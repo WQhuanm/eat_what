@@ -39,26 +39,6 @@
     </view>
 
     <view class="form-item">
-      <text class="form-label">卡路里 (kcal)</text>
-      <input class="form-input" type="digit" placeholder="如：350" value="{{form.calories}}" bindinput="onInput" data-field="calories" />
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">蛋白质 (g)</text>
-      <input class="form-input" type="digit" value="{{form.protein}}" bindinput="onInput" data-field="protein" />
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">脂肪 (g)</text>
-      <input class="form-input" type="digit" value="{{form.fat}}" bindinput="onInput" data-field="fat" />
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">碳水 (g)</text>
-      <input class="form-input" type="digit" value="{{form.carbohydrate}}" bindinput="onInput" data-field="carbohydrate" />
-    </view>
-
-    <view class="form-item">
       <text class="form-label">主要食材 (逗号分隔)</text>
       <input class="form-input" placeholder="如：豆腐,猪肉,辣椒" value="{{ingredientsText}}" bindinput="onIngredientsInput" />
     </view>
@@ -70,7 +50,7 @@
 
     <!-- 图片上传 -->
     <view class="form-item">
-      <text class="form-label">宣传图片</text>
+      <text class="form-label">宣传图片（支持URL或本地上传）</text>
       <view class="img-upload-area">
         <view class="img-preview" wx:for="{{previewImages}}" wx:key="*this">
           <image src="{{item}}" mode="aspectFill" />
@@ -82,23 +62,6 @@
       </view>
     </view>
 
-    <view class="form-item">
-      <text class="form-label">就餐形式</text>
-      <view class="tag-group">
-        <view wx:for="{{diningFormOptions}}" wx:key="*this"
-          class="tag-item {{tools.isSelected(form.dining_forms, item) ? 'selected' : ''}}"
-          bindtap="toggleDiningForm" data-val="{{item}}">{{item}}</view>
-      </view>
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">所在城市</text>
-      <input class="form-input" placeholder="如：广州" value="{{form.city}}" bindinput="onInput" data-field="city" />
-    </view>
-
-    <button class="btn-primary" style="margin-top:10rpx" bindtap="onGetLocation">📍 获取当前位置</button>
-    <text class="location-text" wx:if="{{form.latitude}}">经度: {{form.longitude}} 纬度: {{form.latitude}}</text>
+    <button class="btn-primary" style="margin-top:30rpx" bindtap="submitDish" loading="{{submitting}}">提交菜品（审核后展示）</button>
   </view>
-
-  <button class="btn-primary" style="margin-top:30rpx" bindtap="submitDish" loading="{{submitting}}">提交菜品</button>
 </view>

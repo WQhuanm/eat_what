@@ -11,18 +11,22 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from vectorize import generate_dish_vector, infer_taste_scores
+from shop_name_parser import extract_shop_type_info, get_primary_cuisine, enhance_taste_scores
 
 
 CUISINE_KEYWORDS = {
-    "烧烤": ["烧烤", "烤", "串", "炭烤", "烤鱼"],
-    "川湘菜": ["川", "湘", "麻辣", "水煮", "香辣", "辣子"],
-    "粤菜": ["粤", "广式", "烧腊", "早茶"],
-    "江浙菜": ["江浙", "本帮", "杭帮", "宁波"],
-    "日韩料理": ["日式", "寿司", "刺身", "韩", "泡菜", "石锅"],
-    "西餐": ["披萨", "意面", "牛排", "汉堡", "薯条", "沙拉"],
-    "快餐便当": ["便当", "套餐", "快餐", "盖饭", "炒饭", "简餐"],
-    "火锅": ["火锅", "冒菜", "串串", "麻辣烫"],
-    "饮品甜点": ["奶茶", "咖啡", "甜品", "蛋糕", "冰淇淋", "果茶"],
+    "烧烤烤肉": ["烧烤", "烤肉", "烤", "串", "炭烤", "烤鱼", "铁板烧"],
+    "奶茶果汁": ["奶茶", "果汁", "茶饮", "果茶", "咖啡", "柠檬茶", "奶昔"],
+    "炸鸡炸串": ["炸鸡", "炸串", "炸", "香酥", "脆皮"],
+    "鸭脖卤味": ["鸭脖", "卤味", "卤", "鸭", "凤爪", "凉菜"],
+    "特色小吃": ["小吃", "特色", "煎饼", "肉夹馍", "臭豆腐", "煎饼果子", "凉皮"],
+    "米粉面条": ["米粉", "面条", "米线", "拉面", "牛肉面", "拌面", "炒粉"],
+    "快餐便当": ["便当", "套餐", "快餐", "盖饭", "炒饭", "简餐", "饭", "双拼"],
+    "汉堡薯条": ["汉堡", "薯条", "炸鸡汉堡", "西式快餐", "三明治"],
+    "粥食点心": ["粥", "点心", "包子", "饺子", "馄饨", "烧麦", "小笼包", "汤包"],
+    "地方菜系": ["川菜", "湘菜", "粤菜", "江浙菜", "本帮", "杭帮", "东北菜", "西北菜", "家常菜"],
+    "麻辣烫冒菜": ["麻辣烫", "冒菜", "串串", "火锅", "麻辣拌"],
+    "饺子馄饨": ["饺子", "馄饨", "抄手", "云吞", "水饺"],
 }
 
 TASTE_KEYWORDS = {
@@ -143,17 +147,20 @@ class DishFeature:
     image_url: Optional[str]
     taste_hint: Optional[str]
     taste_detail: List[str]
+    shop_specialties: List[str]  # 商家主营品类（从名称解析）
+    shop_taste_context: List[str]  # 商家口味上下文
+    shop_scene: str  # 商家用餐场景
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="将饿了么抓取菜单转换为可导入数据库的种子文件")
-    parser.add_argument("--input", default=str(Path(__file__).resolve().parents[2] / "get_data" / ".generated" / "menus_around.json"), help="抓取菜单 JSON 文件路径")
+    parser.add_argument("--input", default=str(Path(__file__).resolve().parents[2] / "get_data" / ".generated"), help="抓取菜单 JSON 文件路径或目录（支持批量处理目录下所有 .json 文件）")
     parser.add_argument("--output", default=str(Path(__file__).resolve().parents[1] / ".generated" / "eleme_seed_payload.json"), help="输出种子文件路径")
     parser.add_argument("--city", default=None, help="城市（可选，不传则为空）")
     parser.add_argument("--latitude", type=float, default=None, help="默认纬度")
     parser.add_argument("--longitude", type=float, default=None, help="默认经度")
     parser.add_argument("--meta", default=str(Path(__file__).resolve().parents[2] / "get_data" / ".generated" / "menus_meta.json"), help="抓取批次元数据路径")
-    parser.add_argument("--vectorizer", choices=["auto", "nlp-service", "local-model"], default="auto", help="向量化方式")
+    parser.add_argument("--vectorizer", choices=["auto", "nlp-service", "local-model"], default="local-model", help="向量化方式")
     parser.add_argument("--nlp-url", default="http://nlp-service/v1/vectorize", help="NLP 向量服务地址")
     parser.add_argument("--vector-dim", type=int, default=768, help="向量维度")
     parser.add_argument("--import-db", action="store_true", help="转换后直接写入数据库")
@@ -195,12 +202,10 @@ def parse_month_sales(raw: Optional[str]) -> Optional[int]:
     return int(digits) if digits else None
 
 
-def detect_cuisine(*texts: str) -> Optional[str]:
-    text = " ".join([t for t in texts if t])
-    for cuisine, keywords in CUISINE_KEYWORDS.items():
-        if any(k in text for k in keywords):
-            return cuisine
-    return "快餐便当"
+def detect_cuisine(shop_name: str, *texts: str) -> Optional[str]:
+    """增强版菜系检测：优先使用商家名称解析的品类"""
+    from shop_name_parser import get_primary_cuisine
+    return get_primary_cuisine(shop_name, *texts)
 
 
 def normalize_taste_hint_to_tags(taste_hint: Optional[str]) -> List[str]:
@@ -289,7 +294,7 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
     for shop in raw_data:
         shop_name = normalize_text(shop.get("shop_name"))
         source_shop_id = normalize_text(shop.get("shop_id"))
-        shop_url = normalize_text(shop.get("shop_url"))
+        shop_image_url = normalize_text(shop.get("shop_image_url"))
         if not shop_name or not source_shop_id:
             continue
 
@@ -298,14 +303,20 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
                 "source_shop_id": source_shop_id,
                 "name": shop_name,
                 "address": normalize_text(shop.get("shop_address")) or None,
-                "source_url": shop_url or None,
+                "source_url": shop_image_url or None,
                 "is_approved": True,
                 "latitude": shop.get("shop_latitude"),
                 "longitude": shop.get("shop_longitude"),
             }
         )
 
-        for menu_item in shop.get("menu", []):
+        # 提取商家类型信息（一次性提取，所有菜品共享）
+        shop_type_info = extract_shop_type_info(shop_name)
+        shop_specialties = shop_type_info.get("specialties", [])
+        shop_taste_context = shop_type_info.get("taste_context", [])
+        shop_scene = shop_type_info.get("scene", "正餐")
+        
+        for menu_item in shop.get("menus", []):
             dish_name = normalize_text(menu_item.get("name"))
             if not dish_name:
                 continue
@@ -339,6 +350,9 @@ def build_features(raw_data: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]]
                     image_url=normalize_text(menu_item.get("image_url")) or None,
                     taste_hint=taste_hint or None,
                     taste_detail=taste_detail,
+                    shop_specialties=shop_specialties,
+                    shop_taste_context=shop_taste_context,
+                    shop_scene=shop_scene,
                 )
             )
 
@@ -363,6 +377,9 @@ def build_vectors(features: List[DishFeature], args: argparse.Namespace) -> Tupl
                 latitude=args.latitude,
                 longitude=args.longitude,
                 shop_name=features[0].shop_name,
+                shop_specialties=features[0].shop_specialties,
+                shop_taste_context=features[0].shop_taste_context,
+                shop_scene=features[0].shop_scene,
                 vectorizer="nlp-service",
                 nlp_url=args.nlp_url,
                 vector_dim=args.vector_dim,
@@ -381,6 +398,9 @@ def build_vectors(features: List[DishFeature], args: argparse.Namespace) -> Tupl
                 latitude=args.latitude,
                 longitude=args.longitude,
                 shop_name=feature.shop_name,
+                shop_specialties=feature.shop_specialties,
+                shop_taste_context=feature.shop_taste_context,
+                shop_scene=feature.shop_scene,
                 vectorizer=used,
                 nlp_url=args.nlp_url,
                 vector_dim=args.vector_dim,
@@ -390,13 +410,58 @@ def build_vectors(features: List[DishFeature], args: argparse.Namespace) -> Tupl
     return vectors, used
 
 
+def load_all_json_files(input_path: Path) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """
+    加载单个 JSON 文件或目录下的所有 JSON 文件
+    
+    Returns:
+        Tuple[List[Dict], List[str]]: (所有商铺数据列表, 处理的文件路径列表)
+    """
+    all_raw_data: List[Dict[str, Any]] = []
+    processed_files: List[str] = []
+    
+    if input_path.is_file():
+        # 单个文件
+        print(f"加载单个文件: {input_path}")
+        raw_data = load_json(input_path)
+        if isinstance(raw_data, list):
+            all_raw_data.extend(raw_data)
+        else:
+            all_raw_data.append(raw_data)
+        processed_files.append(str(input_path))
+    elif input_path.is_dir():
+        # 目录，批量加载所有 .json 文件
+        json_files = sorted(input_path.glob("*.json"))
+        print(f"发现 {len(json_files)} 个 JSON 文件在目录: {input_path}")
+        
+        for json_file in json_files:
+            try:
+                print(f"  加载: {json_file.name}")
+                raw_data = load_json(json_file)
+                if isinstance(raw_data, list):
+                    all_raw_data.extend(raw_data)
+                else:
+                    all_raw_data.append(raw_data)
+                processed_files.append(str(json_file))
+            except Exception as e:
+                print(f"  错误: 无法加载 {json_file.name}: {e}")
+    else:
+        raise FileNotFoundError(f"输入路径不存在: {input_path}")
+    
+    print(f"总计加载 {len(all_raw_data)} 个商铺数据")
+    return all_raw_data, processed_files
+
+
 def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
     input_path = Path(args.input)
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    raw_data = load_json(input_path)
-    shops, dish_features = build_features(raw_data)
+    # 加载所有 JSON 文件
+    all_raw_data, processed_files = load_all_json_files(input_path)
+    
+    # 构建特征
+    shops, dish_features = build_features(all_raw_data)
     vectors, vectorizer_used = build_vectors(dish_features, args)
 
     dishes_payload: List[Dict[str, Any]] = []
@@ -407,7 +472,11 @@ def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
             continue
         seen_dish_keys.add(dedupe_key)
 
-        taste_scores = infer_taste_scores(feature.name, feature.description, feature.taste_tags, feature.cuisine)
+        # 使用增强版口味分数
+        from shop_name_parser import enhance_taste_scores
+        base_scores = infer_taste_scores(feature.name, feature.description, feature.taste_tags, feature.cuisine)
+        taste_scores = enhance_taste_scores(feature.shop_name, base_scores)
+        
         dishes_payload.append(
             {
                 "shop_source_id": feature.shop_source_id,
@@ -420,15 +489,12 @@ def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
                 "taste_scores": taste_scores,
                 "taste_detail": feature.taste_detail,
                 "price": feature.price,
-                "calories": None,
-                "protein": None,
-                "fat": None,
-                "carbohydrate": None,
                 "ingredients": feature.ingredients,
                 "image_urls": [feature.image_url] if feature.image_url else [],
                 "description": feature.description,
-                "taste_hint": feature.taste_hint,
-                "dining_forms": ["外卖配送", "打包带走"],
+                "shop_specialties": feature.shop_specialties,
+                "shop_taste_context": feature.shop_taste_context,
+                "shop_scene": feature.shop_scene,
                 "vector": vector,
                 "is_approved": True,
             }
@@ -442,7 +508,7 @@ def prepare_payload(args: argparse.Namespace) -> Dict[str, Any]:
     payload = {
         "meta": {
             "generated_at": datetime.now().isoformat(timespec="seconds"),
-            "source_file": str(input_path),
+            "source_files": processed_files,
             "shop_count": len(shops),
             "dish_count": len(dishes_payload),
             "vector_dim": args.vector_dim,
@@ -510,15 +576,15 @@ def import_payload_to_db(payload: Dict[str, Any], clear_before_import: bool = Fa
                 longitude=dish_item.get("longitude"),
                 cuisine=dish_item.get("cuisine"),
                 taste_tags=dish_item.get("taste_tags"),
+                taste_scores=dish_item.get("taste_scores"),
+                taste_detail=dish_item.get("taste_detail"),
                 price=dish_item.get("price"),
-                calories=dish_item.get("calories"),
-                protein=dish_item.get("protein"),
-                fat=dish_item.get("fat"),
-                carbohydrate=dish_item.get("carbohydrate"),
                 ingredients=dish_item.get("ingredients"),
                 image_urls=dish_item.get("image_urls"),
                 description=dish_item.get("description"),
-                dining_forms=dish_item.get("dining_forms"),
+                shop_specialties=dish_item.get("shop_specialties"),
+                shop_taste_context=dish_item.get("shop_taste_context"),
+                shop_scene=dish_item.get("shop_scene"),
                 vector=dish_item.get("vector"),
                 is_approved=bool(dish_item.get("is_approved", True)),
             )
@@ -538,7 +604,15 @@ def main() -> None:
     args = parse_args()
     args = apply_meta_defaults(args)
     payload = prepare_payload(args)
-    print(json.dumps({"status": "ok", "output": args.output, "shop_count": payload["meta"]["shop_count"], "dish_count": payload["meta"]["dish_count"], "vectorizer": payload["meta"]["vectorizer"]}, ensure_ascii=False))
+    result = {
+        "status": "ok",
+        "output": args.output,
+        "shop_count": payload["meta"]["shop_count"],
+        "dish_count": payload["meta"]["dish_count"],
+        "vectorizer": payload["meta"]["vectorizer"],
+        "source_files_count": len(payload["meta"].get("source_files", [])),
+    }
+    print(json.dumps(result, ensure_ascii=False))
     if args.import_db:
         shops, dishes = import_payload_to_db(payload, clear_before_import=args.clear_before_import)
         print(json.dumps({"db_imported_shops": shops, "db_imported_dishes": dishes}, ensure_ascii=False))

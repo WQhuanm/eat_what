@@ -40,16 +40,6 @@
     </view>
   </view>
 
-  <!-- 饮食禁忌 -->
-  <view class="card">
-    <text class="section-title">饮食禁忌与过敏原</text>
-    <view class="tag-group">
-      <view wx:for="{{restrictionOptions}}" wx:key="*this"
-        class="tag-item {{tools.isSelected(form.dietary_restrictions, item) ? 'selected' : ''}}"
-        bindtap="toggleRestriction" data-val="{{item}}">{{item}}</view>
-    </view>
-  </view>
-
   <!-- 口味偏好 -->
   <view class="card">
     <text class="section-title">口味偏好 (0-5)</text>
@@ -70,9 +60,9 @@
     </view>
   </view>
 
-  <!-- 忌口食材 -->
+  <!-- 忌口与饮食限制 -->
   <view class="card">
-    <text class="section-title">忌口食材</text>
+    <text class="section-title">忌口与饮食限制</text>
     <view class="tag-group">
       <view wx:for="{{avoidOptions}}" wx:key="*this"
         class="tag-item {{tools.isSelected(form.avoid_foods, item) ? 'selected' : ''}}"

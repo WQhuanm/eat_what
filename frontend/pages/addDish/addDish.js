@@ -6,15 +6,12 @@ Page({
     submitting: false,
     form: {
       name: '', shop_id: null, cuisine: '', taste_tags: [], price: null,
-      calories: null, protein: null, fat: null, carbohydrate: null,
-      ingredients: [], description: '', dining_forms: [],
-      city: '', latitude: null, longitude: null, image_urls: []
+      ingredients: [], description: '', image_urls: []
     },
     ingredientsText: '',
     cuisineIndex: -1,
-    cuisineOptions: ['川湘菜', '江浙菜', '粤菜', '日韩料理', '西餐', '快餐便当', '东北菜', '其他'],
+    cuisineOptions: ['烧烤烤肉', '奶茶果汁', '炸鸡炸串', '鸭脖卤味', '特色小吃', '米粉面条', '快餐便当', '汉堡薯条', '粥食点心', '地方菜系', '麻辣烫冒菜', '饺子馄饨', '其他'],
     tasteOptions: ['酸', '甜', '辣', '咸', '清淡', '苦'],
-    diningFormOptions: ['外卖配送', '到店堂食', '打包带走'],
     shops: [],
     shopNames: [],
     shopIndex: -1,
@@ -48,10 +45,7 @@ Page({
       const shop = this.data.shops[idx - 1]
       this.setData({
         shopIndex: idx,
-        'form.shop_id': shop.id,
-        'form.city': shop.city || this.data.form.city,
-        'form.latitude': shop.latitude || this.data.form.latitude,
-        'form.longitude': shop.longitude || this.data.form.longitude
+        'form.shop_id': shop.id
       })
     }
   },
@@ -71,14 +65,6 @@ Page({
     const idx = arr.indexOf(val)
     idx >= 0 ? arr.splice(idx, 1) : arr.push(val)
     this.setData({ 'form.taste_tags': arr })
-  },
-
-  toggleDiningForm(e) {
-    const val = e.currentTarget.dataset.val
-    let arr = [...this.data.form.dining_forms]
-    const idx = arr.indexOf(val)
-    idx >= 0 ? arr.splice(idx, 1) : arr.push(val)
-    this.setData({ 'form.dining_forms': arr })
   },
 
   onIngredientsInput(e) {
@@ -116,22 +102,6 @@ Page({
     this.setData({ previewImages: imgs, 'form.image_urls': urls })
   },
 
-  onGetLocation() {
-    wx.getLocation({
-      type: 'gcj02',
-      success: (res) => {
-        this.setData({
-          'form.latitude': res.latitude,
-          'form.longitude': res.longitude
-        })
-        wx.showToast({ title: '定位成功', icon: 'success' })
-      },
-      fail: () => {
-        wx.showToast({ title: '定位失败', icon: 'none' })
-      }
-    })
-  },
-
   async submitDish() {
     const f = this.data.form
     if (!f.name) {
@@ -143,22 +113,14 @@ Page({
       cuisine: f.cuisine || null,
       taste_tags: f.taste_tags.length ? f.taste_tags : null,
       price: f.price ? Number(f.price) : null,
-      calories: f.calories ? Number(f.calories) : null,
-      protein: f.protein ? Number(f.protein) : null,
-      fat: f.fat ? Number(f.fat) : null,
-      carbohydrate: f.carbohydrate ? Number(f.carbohydrate) : null,
       ingredients: f.ingredients.length ? f.ingredients : null,
       description: f.description || null,
-      dining_forms: f.dining_forms.length ? f.dining_forms : null,
-      city: f.city || null,
-      latitude: f.latitude,
-      longitude: f.longitude,
       image_urls: f.image_urls.length ? f.image_urls : null
     }
     this.setData({ submitting: true })
     try {
       await api.createDish(payload)
-      wx.showToast({ title: '提交成功', icon: 'success' })
+      wx.showToast({ title: '提交成功，等待审核', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 1500)
     } catch (e) {
       wx.showToast({ title: e.message || '提交失败', icon: 'none' })

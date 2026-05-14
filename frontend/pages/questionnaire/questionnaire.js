@@ -87,7 +87,7 @@ Page({
   nextQuestion() {
     const q = this.data.questions[this.data.currentIndex]
     const key = q.question_key
-    const optional = ['special_requirements', 'special_state'].includes(key)
+    const optional = q.required === false
     if (!optional && (!this.data.selectedMap[key] || this.data.selectedMap[key].length === 0)) {
       wx.showToast({ title: '请先完成当前题目', icon: 'none' })
       return
@@ -118,26 +118,12 @@ Page({
 
   _buildInstantWeights(payload) {
     const w = {}
-    const tp = payload.taste_preference
-    if (tp === '重口过瘾') {
-      w['辣'] = 0.9; w['咸'] = 0.6
-    } else if (tp === '清淡本味') {
-      w['清淡'] = 0.9
-    } else if (tp === '酸甜开胃') {
-      w['酸'] = 0.7; w['甜'] = 0.6
-    } else if (tp === '奶甜香腻') {
-      w['甜'] = 0.8
-    } else if (tp === '酱香卤香') {
-      w['咸'] = 0.8
-    } else if (tp === '孜然烧烤') {
-      w['咸'] = 0.6; w['辣'] = 0.4
-    }
-
-    w['辣'] = (w['辣'] || 0) + (payload.spicy_level / 5) * 0.8
-    w['酸'] = (w['酸'] || 0) + (payload.sour_level / 5) * 0.7
-    w['甜'] = (w['甜'] || 0) + (payload.sweet_level / 5) * 0.7
-    w['咸'] = (w['咸'] || 0) + (payload.salty_level / 5) * 0.7
-    w['清淡'] = (w['清淡'] || 0) + (1 - payload.oily_level / 5) * 0.5
+    if (payload.spicy_level != null) w['辣'] = (payload.spicy_level / 5) * 0.8
+    if (payload.numbing_level != null) w['麻'] = (payload.numbing_level / 5) * 0.8
+    if (payload.sour_level != null) w['酸'] = (payload.sour_level / 5) * 0.7
+    if (payload.sweet_level != null) w['甜'] = (payload.sweet_level / 5) * 0.7
+    if (payload.salty_level != null) w['咸'] = (payload.salty_level / 5) * 0.7
+    if (payload.oily_level != null) w['清淡'] = (1 - payload.oily_level / 5) * 0.5
     return w
   },
 
@@ -153,30 +139,33 @@ Page({
       dining_goal: this._readSingle('dining_goal', ''),
       decision_style: this._readSingle('decision_style', ''),
       dining_form: this._readSingle('dining_form', ''),
-      budget: this._readSingle('budget', ''),
-      taste_preference: this._readSingle('taste_preference', ''),
-      cuisine_preference: this._readMulti('cuisine_preference').slice(0, 2),
-      ingredient_preference: this._readSingle('ingredient_preference', ''),
-      avoid_foods: this._readMulti('avoid_foods'),
-      spicy_level: Number(this._readSingle('spicy_level', 0) || 0),
-      numbing_level: Number(this._readSingle('numbing_level', 0) || 0),
-      sour_level: Number(this._readSingle('sour_level', 0) || 0),
-      sweet_level: Number(this._readSingle('sweet_level', 0) || 0),
-      salty_level: Number(this._readSingle('salty_level', 0) || 0),
-      oily_level: Number(this._readSingle('oily_level', 0) || 0),
-      texture_preference: this._readSingle('texture_preference', ''),
-      temperature_preference: this._readSingle('temperature_preference', ''),
-      special_requirements: this._readSingle('special_requirements', ''),
-      special_state: this._readSingle('special_state', '无'),
+      budget: this._readMulti('budget'),
+      cuisine_preference: this._readMulti('cuisine_preference'),
+      spicy_level: this.data.selectedMap['spicy_level'] ? Number(this.data.selectedMap['spicy_level'][0]) : null,
+      numbing_level: this.data.selectedMap['numbing_level'] ? Number(this.data.selectedMap['numbing_level'][0]) : null,
+      sour_level: this.data.selectedMap['sour_level'] ? Number(this.data.selectedMap['sour_level'][0]) : null,
+      sweet_level: this.data.selectedMap['sweet_level'] ? Number(this.data.selectedMap['sweet_level'][0]) : null,
+      salty_level: this.data.selectedMap['salty_level'] ? Number(this.data.selectedMap['salty_level'][0]) : null,
+      oily_level: this.data.selectedMap['oily_level'] ? Number(this.data.selectedMap['oily_level'][0]) : null,
       follow_up_answers: null,
     }
 
-    const required = ['meal_time', 'dining_scene', 'dining_goal', 'decision_style', 'dining_form', 'budget', 'taste_preference', 'ingredient_preference']
+    const required = ['meal_time', 'dining_scene', 'dining_goal', 
+      'decision_style', 'dining_form', 'budget']
+
     for (let i = 0; i < required.length; i++) {
-      if (!payload[required[i]]) {
-        wx.showToast({ title: '请完成必填题', icon: 'none' })
-        return
-      }
+    const key = required[i]
+    if (!payload[key]) {
+    // 从 questions 数组中匹配当前 key 对应的中文题目
+    const question = this.data.questions.find(q => q.question_key === key)
+    // 适配常见字段名：title / question_text / text / label，找不到就回退显示 key
+    const name = question 
+    ? (question.question_text || question.text || question.label || key) 
+    : key
+
+    wx.showToast({ title: `请完成：${name}`, icon: 'none' })
+    return
+    }
     }
 
     payload.instant_weights = this._buildInstantWeights(payload)

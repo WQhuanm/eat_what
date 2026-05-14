@@ -27,7 +27,6 @@ class UserProfileCreate(BaseModel):
     weight: Optional[float] = None
     activity_factor: Optional[float] = Field(None, description="1.2/1.375/1.55/1.725")
     health_goal: Optional[str] = None
-    dietary_restrictions: Optional[List[str]] = None
     taste_preferences: Optional[Dict[str, int]] = None  # {"酸":3,"甜":4,...}
     cuisine_preferences: Optional[List[str]] = None
     avoid_foods: Optional[List[str]] = None
@@ -58,20 +57,12 @@ class ShopOut(ShopCreate):
 class DishCreate(BaseModel):
     name: str
     shop_id: Optional[int] = None
-    city: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
     cuisine: Optional[str] = None
     taste_tags: Optional[List[str]] = None
     price: Optional[float] = None
-    calories: Optional[float] = None
-    protein: Optional[float] = None
-    fat: Optional[float] = None
-    carbohydrate: Optional[float] = None
     ingredients: Optional[List[str]] = None
     image_urls: Optional[List[str]] = None
     description: Optional[str] = None
-    dining_forms: Optional[List[str]] = None
 
 class DishOut(DishCreate):
     id: int
@@ -86,10 +77,12 @@ class QuestionOption(BaseModel):
     question_text: str
     options: List[str] = []
     multi_select: bool = False
-    question_type: str = "single"  # single/multi/scale/text
+    question_type: str = "single"  # single/multi/scale/text/multi_scale
     min_value: Optional[int] = None
     max_value: Optional[int] = None
     step: Optional[int] = None
+    required: bool = True
+    sub_questions: Optional[List[dict]] = None  # 用于 multi_scale 复合题型
 
 class QuestionnaireAnswers(BaseModel):
     meal_time: str
@@ -97,21 +90,14 @@ class QuestionnaireAnswers(BaseModel):
     dining_goal: str
     decision_style: str
     dining_form: str
-    budget: str
-    taste_preference: str
+    budget: List[str] = []  # 多选预算
     cuisine_preference: List[str] = []
-    ingredient_preference: str
-    avoid_foods: List[str] = []
-    spicy_level: int = 0
-    numbing_level: int = 0
-    sour_level: int = 0
-    sweet_level: int = 0
-    salty_level: int = 0
-    oily_level: int = 0
-    texture_preference: Optional[str] = None
-    temperature_preference: Optional[str] = None
-    special_requirements: Optional[str] = None
-    special_state: Optional[str] = None
+    spicy_level: Optional[int] = None
+    numbing_level: Optional[int] = None
+    sour_level: Optional[int] = None
+    sweet_level: Optional[int] = None
+    salty_level: Optional[int] = None
+    oily_level: Optional[int] = None
     follow_up_answers: Optional[Dict[str, str]] = None  # 动态追问的回答
     instant_weights: Optional[Dict[str, float]] = None  # 即时画像权重
 

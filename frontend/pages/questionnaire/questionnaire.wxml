@@ -23,19 +23,23 @@
         />
       </view>
 
-      <view wx:if="{{questions[currentIndex].question_type === 'text'}}" class="text-box">
-        <textarea
-          class="form-input"
-          placeholder="请输入特殊需求（可选）"
-          value="{{selectedMap[questions[currentIndex].question_key] ? selectedMap[questions[currentIndex].question_key][0] : ''}}"
-          data-key="{{questions[currentIndex].question_key}}"
-          bindinput="onTextInput"
-          maxlength="120"
-        />
+      <view wx:if="{{questions[currentIndex].question_type === 'multi_scale'}}" class="multi-scale-box">
+        <view wx:for="{{questions[currentIndex].sub_questions}}" wx:key="key" class="sub-scale-item">
+          <text class="sub-scale-label">{{item.label}}（{{item.min_value || 0}}-{{item.max_value || 5}}）</text>
+          <slider
+            min="{{item.min_value || 0}}"
+            max="{{item.max_value || 5}}"
+            step="{{item.step || 1}}"
+            value="{{selectedMap[item.key] ? selectedMap[item.key][0] : 0}}"
+            show-value="true"
+            data-key="{{item.key}}"
+            bindchange="onScaleChange"
+          />
+        </view>
       </view>
 
       <view
-        wx:if="{{questions[currentIndex].question_type !== 'scale' && questions[currentIndex].question_type !== 'text'}}"
+        wx:if="{{questions[currentIndex].question_type !== 'scale' && questions[currentIndex].question_type !== 'multi_scale'}}"
         wx:for="{{questions[currentIndex].options}}"
         wx:key="*this"
         class="option-item {{tools.isSelected(selectedMap, questions[currentIndex].question_key, item) ? 'selected' : ''}}"

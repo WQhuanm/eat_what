@@ -60,11 +60,19 @@ def list_dishes(
 def create_dish(body: DishCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     dish = Dish(**body.model_dump(exclude_none=True))
 
-    # 调用 NLP 模型生成菜品向量
+    # 如果关联了店铺，自动继承位置信息
     shop_name = None
     if dish.shop_id:
         shop = db.query(Shop).filter(Shop.id == dish.shop_id).first()
-        shop_name = shop.name if shop else None
+        if shop:
+            shop_name = shop.name
+            # 自动从商家继承位置（如果菜品未指定）
+            if not dish.city:
+                dish.city = shop.city
+            if dish.latitude is None:
+                dish.latitude = shop.latitude
+            if dish.longitude is None:
+                dish.longitude = shop.longitude
 
     try:
         dish.vector = generate_dish_vector(

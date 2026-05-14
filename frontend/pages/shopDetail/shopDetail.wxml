@@ -1,0 +1,32 @@
+<view class="container">
+  <view class="shop-header card">
+    <text class="shop-name">{{shopName}}</text>
+    <text class="shop-address" wx:if="{{address}}">{{address}}</text>
+  </view>
+
+  <view class="section-title">全部菜品 ({{dishes.length}})</view>
+
+  <view wx:if="{{loading}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:if="{{!loading && dishes.length === 0}}" class="empty-tip">
+    <text>该商家暂无菜品</text>
+  </view>
+
+  <view class="dish-list">
+    <view class="dish-card card" wx:for="{{dishes}}" wx:key="dish_id" bindtap="goDishDetail" data-id="{{item.dish_id}}">
+      <image class="dish-img" src="{{item.image_url || '/assets/images/default-food.png'}}" mode="aspectFill" />
+      <view class="dish-info">
+        <text class="dish-name">{{item.dish_name}}</text>
+        <view class="dish-tags" wx:if="{{item.taste_tags && item.taste_tags.length > 0}}">
+          <text class="tag" wx:for="{{item.taste_tags}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="dish-meta">
+          <text class="price" wx:if="{{item.price}}">¥{{item.price}}</text>
+          <text class="cuisine" wx:if="{{item.cuisine}}">{{item.cuisine}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
