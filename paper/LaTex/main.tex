@@ -100,6 +100,9 @@
 % 一级标题：黑体三号居中，段前0.5行（从页眉下方开始），段后2行
 \ctexset{
 chapter = {
+name = {,},
+number = \arabic{chapter},
+aftername = \quad,
 format = \zihao{3}\heiti\centering,
 beforeskip = 0.5\baselineskip,
 afterskip = 2\baselineskip,
@@ -270,7 +273,7 @@ pagestyle = plain,
 
 \vspace{1cm}
 
-{\songti 2026年 5月 12日}
+{\heiti\textbf{2026年 5月 12日}}
 \end{flushright}
 \clearpage
 

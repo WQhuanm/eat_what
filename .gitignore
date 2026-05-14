@@ -5,6 +5,7 @@ __pycache__/
 
 # docs
 paper/毕设
+main.pdf
 
 # C extensions
 *.so
