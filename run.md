@@ -113,15 +113,14 @@ globalData: {
 
 ### 6. 增强版问答字段说明（已实现）
 
-- 题型：单选、多选、滑条（0~5）、文本输入。
-- 核心字段：`meal_time`、`dining_scene`、`dining_goal`、`decision_style`、`dining_form`、`budget`、`taste_preference`、`cuisine_preference`、`ingredient_preference`、`avoid_foods`。
-- 强度字段：`spicy_level`、`numbing_level`、`sour_level`、`sweet_level`、`salty_level`、`oily_level`。
-- 选填字段：`texture_preference`、`temperature_preference`、`special_requirements`、`special_state`。
-- 向量化：后端将上述字段拼接为结构化语义文本，并叠加衍生特征（饱腹度/浓郁度/社交属性）生成用户向量。
+- 题型：单选、多选、滑条（0~5）。
+- 核心字段：`meal_time`、`dining_scene`、`dining_goal`、`decision_style`、`dining_form`、`budget`、`cuisine_preference`。
+- 强度字段（可选）：`spicy_level`、`numbing_level`、`sour_level`、`sweet_level`、`salty_level`、`oily_level`（均为 0~5 滑块，不选表示无特别偏好）。
+- 向量化：后端将上述问答字段与用户画像信息拼接为结构化语义文本，并叠加衍生特征（饱腹度/浓郁度/社交属性）生成用户向量。
 
 ---
 
-### 3. 向量化服务（本地实现）
+### 7. 向量化服务（本地实现）
 
 后端已内置 `nlp-service` 风格接口，无需额外微服务。
 
@@ -136,7 +135,7 @@ globalData: {
 - `DISH_VECTOR_DIM`：向量维度（默认 768）
 - `NLP_VECTOR_URL`：若你接入外部向量服务时可覆盖调用地址
 
-#### 1.5 如何让本地模型可用
+#### 如何让本地模型可用
 
 1. 安装依赖：
 
@@ -174,58 +173,3 @@ python d:\_Project_File\eat_what\backend\main.py
 - 返回 503，说明模型未加载成功（依赖或模型下载问题），系统会拒绝向量化写库。
 
 说明：后端默认使用 `local_files_only=True` 加载模型，不会在运行时自动联网下载，避免启动阻塞。
-
-#### 1.6 菜单抓取→向量化→导入（简化流程）
-
-以下命令覆盖两种场景：当前位置抓取 / 指定经纬度抓取。  
-抓取结果与中间文件统一写入 `get_data/.generated/` 与 `backend/.generated/`（已 Git 忽略）。
-
-1. 抓取菜单（当前位置）
-
-```bash
-cd d:\_Project_File\eat_what\get_data
-python eleme_full_menu_scraper.py --limit 50 --max-dishes-per-shop 30 --timeout-ms 25000
-```
-
-2. 抓取菜单（指定位置，例如杭电）
-
-```bash
-cd d:\_Project_File\eat_what\get_data
-python eleme_full_menu_scraper.py --limit 50 --max-dishes-per-shop 30 --latitude 30.3203 --longitude 120.3501 --timeout-ms 25000
-```
-
-说明：抓取后会生成 `get_data/.generated/menus_meta.json`，记录这批数据来源与定位参数。
-
-若登录态失效，再使用：
-
-```bash
-python eleme_full_menu_scraper.py --manual-login --limit 1 --max-dishes-per-shop 1 --timeout-ms 25000
-```
-
-说明：手动登录成功后，脚本会立即保存登录态到 `get_data/.playwright/eleme_state.json`，并在流程结束时再保存一次，避免中途异常导致登录态丢失。
-
-3. 转换为向量化导入文件（自动读取抓取元数据）
-
-```bash
-cd d:\_Project_File\eat_what\backend
-python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model
-```
-
-4. 导入数据库（增量去重）
-
-```bash
-cd d:\_Project_File\eat_what\backend
-python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model --import-db
-```
-
-5. 导入前清空店铺与菜品表（测试重跑）
-
-```bash
-cd d:\_Project_File\eat_what\backend
-python scripts/prepare_eleme_seed.py --input ../get_data/.generated/menus_around.json --output .generated/eleme_seed_payload.json --vectorizer local-model --import-db --clear-before-import
-```
-
-说明：爬虫导入的店铺与菜品默认 `is_approved=true`，审核管理列表仅展示未通过审核的数据。
-
----
-
