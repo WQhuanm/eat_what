@@ -4,10 +4,19 @@
   <view class="progress-bar">
     <view class="progress-fill" style="width: {{progress}}%"></view>
   </view>
-  <text class="progress-text">{{currentIndex + 1}} / {{questions.length}}</text>
+  <text class="progress-text" wx:if="{{questions.length > 0}}">{{currentIndex + 1}} / {{questions.length}}</text>
+
+  <view class="card loading-card" wx:if="{{loadingQuestions}}">
+    <text class="loading-text">题目加载中，请稍候...</text>
+  </view>
+
+  <view class="card empty-card" wx:if="{{!loadingQuestions && questions.length === 0}}">
+    <text class="empty-text">问卷暂时不可用：{{loadError || '题目加载失败'}}</text>
+    <button class="btn-primary retry-btn" bindtap="retryLoadQuestions">重新加载</button>
+  </view>
 
   <!-- 当前问题 -->
-  <view class="card question-card" wx:if="{{questions.length > 0}}">
+  <view class="card question-card" wx:if="{{!loadingQuestions && questions.length > 0 && currentIndex < questions.length}}">
     <text class="question-text">{{questions[currentIndex].question_text}}</text>
 
     <view class="options-list">
@@ -54,7 +63,7 @@
   </view>
 
   <!-- 操作按钮 -->
-  <view class="btn-group">
+  <view class="btn-group" wx:if="{{!loadingQuestions && questions.length > 0}}">
     <button class="btn-secondary" bindtap="prevQuestion" wx:if="{{currentIndex > 0}}">上一题</button>
     <button class="btn-primary" bindtap="nextQuestion" wx:if="{{currentIndex < questions.length - 1}}">下一题</button>
     <button class="btn-primary" bindtap="submitAnswers" wx:if="{{currentIndex === questions.length - 1}}" loading="{{submitting}}">提交，看看推荐</button>

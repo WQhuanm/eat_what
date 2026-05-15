@@ -8,21 +8,75 @@ Page({
     selectedMap: {},
     progress: 0,
     submitting: false,
+    loadingQuestions: false,
+    loadError: '',
     latitude: 0,
     longitude: 0,
   },
 
   async onLoad() {
+    await this._loadQuestions()
+    this.getLocation()
+  },
+
+  async onShow() {
+    if (this.data.loadingQuestions) return
+
+    // 页面栈返回后，若题库丢失则自动重载，避免白屏
+    if (!this.data.questions.length) {
+      await this._loadQuestions()
+      return
+    }
+
+    this._resetRoundState()
+  },
+
+  _resetRoundState() {
+    this.setData({
+      currentIndex: 0,
+      selectedMap: {},
+      progress: this.data.questions.length ? (1 / this.data.questions.length) * 100 : 0,
+      submitting: false,
+    })
+  },
+
+  retryLoadQuestions() {
+    this._loadQuestions()
+  },
+
+  async _loadQuestions() {
+    if (this.data.loadingQuestions) return
+
+    this.setData({
+      loadingQuestions: true,
+      loadError: '',
+    })
+
     try {
       const questions = await api.getQuestions()
+      if (!Array.isArray(questions) || questions.length === 0) {
+        throw new Error('题目数据异常')
+      }
       this.setData({
         questions,
-        progress: questions.length ? (1 / questions.length) * 100 : 0,
+        currentIndex: 0,
+        selectedMap: {},
+        progress: (1 / questions.length) * 100,
+        submitting: false,
+        loadingQuestions: false,
+        loadError: '',
       })
     } catch (e) {
-      wx.showToast({ title: '加载问题失败', icon: 'none' })
+      this.setData({
+        questions: [],
+        currentIndex: 0,
+        selectedMap: {},
+        progress: 0,
+        submitting: false,
+        loadingQuestions: false,
+        loadError: e.message || '无法加载问卷题目，请检查网络后重试',
+      })
     }
-    this.getLocation()
   },
 
   getLocation() {
@@ -85,6 +139,8 @@ Page({
   },
 
   nextQuestion() {
+    if (!this.data.questions.length) return
+
     const q = this.data.questions[this.data.currentIndex]
     const key = q.question_key
     const optional = q.required === false
@@ -100,6 +156,8 @@ Page({
   },
 
   prevQuestion() {
+    if (!this.data.questions.length) return
+
     const prev = this.data.currentIndex - 1
     this.setData({
       currentIndex: prev,
@@ -128,6 +186,11 @@ Page({
   },
 
   async submitAnswers() {
+    if (!this.data.questions.length) {
+      wx.showToast({ title: '题目未加载完成，请稍后重试', icon: 'none' })
+      return
+    }
+
     if (!this.data.latitude || !this.data.longitude) {
       wx.showToast({ title: '定位失败，请检查权限后重试', icon: 'none' })
       return

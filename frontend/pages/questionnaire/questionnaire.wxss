@@ -18,6 +18,24 @@
   margin-bottom: 30rpx;
 }
 .question-card { padding: 40rpx 30rpx; }
+.loading-card,
+.empty-card {
+  padding: 60rpx 30rpx;
+  text-align: center;
+}
+
+.loading-text,
+.empty-text {
+  font-size: 30rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+.retry-btn {
+  margin-top: 32rpx;
+  width: 60%;
+}
+
 .question-text {
   font-size: 36rpx;
   font-weight: bold;

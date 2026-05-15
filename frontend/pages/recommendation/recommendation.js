@@ -56,15 +56,13 @@ Page({
             question_snapshot: this.data.questionSnapshot
           })
 
-          // 为其他未选菜品记录负样本
+          // 异步记录少量负样本，避免一次性并发请求过多导致后续页面卡顿
           this._logNegativeSamples(dish.dish_id)
 
           wx.showToast({ title: '已记录选择', icon: 'success' })
           setTimeout(() => {
-            wx.navigateTo({
-              url: '/pages/dishDetail/dishDetail?payload=' + encodeURIComponent(JSON.stringify(dish)) + '&from=confirm'
-            })
-          }, 1500)
+            wx.switchTab({ url: '/pages/home/home' })
+          }, 800)
         } catch (err) {
           wx.showToast({ title: err.message || '记录失败', icon: 'none' })
         }
@@ -75,14 +73,18 @@ Page({
   // 异步记录负样本，不阻塞主流程
   _logNegativeSamples(selectedId) {
     const batch_id = this.data.batch_id
-    this.data.items.forEach(item => {
-      if (item.dish_id !== selectedId) {
+    const negatives = (this.data.items || [])
+      .filter(item => item.dish_id !== selectedId)
+      .slice(0, 8)
+
+    negatives.forEach((item, idx) => {
+      setTimeout(() => {
         api.logInteraction({
           recommendation_batch_id: batch_id,
           clicked_dish_id: item.dish_id,
           result: false
-        }).catch(() => {}) // 静默失败
-      }
+        }).catch(() => {})
+      }, idx * 80)
     })
   },
 

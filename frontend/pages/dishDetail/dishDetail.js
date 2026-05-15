@@ -3,7 +3,6 @@ const api = require('../../utils/api')
 Page({
   data: {
     dish: null,
-    fromConfirm: false,
   },
 
   normalizeDish(dish) {
@@ -24,8 +23,6 @@ Page({
   },
 
   onLoad(options) {
-    this.setData({ fromConfirm: options.from === 'confirm' })
-
     if (options.payload) {
       try {
         const dish = JSON.parse(decodeURIComponent(options.payload))
@@ -46,12 +43,6 @@ Page({
       this.setData({ dish: this.normalizeDish(dish) })
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' })
-    }
-  },
-
-  onUnload() {
-    if (this.data.fromConfirm) {
-      wx.switchTab({ url: '/pages/home/home' })
     }
   }
 })

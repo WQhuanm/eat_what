@@ -6,6 +6,7 @@ function request(url, method, data) {
       url: app.globalData.baseUrl + url,
       method: method || 'GET',
       data: data,
+      timeout: 15000,
       header: {
         'Content-Type': 'application/json',
         'Authorization': app.globalData.token ? 'Bearer ' + app.globalData.token : ''
@@ -14,7 +15,14 @@ function request(url, method, data) {
         if (res.statusCode === 401) {
           wx.removeStorageSync('token')
           app.globalData.token = ''
-          wx.reLaunch({ url: '/pages/login/login' })
+          // 防止连续多个并发请求同时触发 reLaunch 导致页面栈混乱
+          if (!app.globalData._isRelaunching) {
+            app.globalData._isRelaunching = true
+            wx.reLaunch({
+              url: '/pages/login/login',
+              complete: () => { app.globalData._isRelaunching = false }
+            })
+          }
           reject(new Error('未授权'))
           return
         }
@@ -26,7 +34,10 @@ function request(url, method, data) {
         resolve(res.data)
       },
       fail(err) {
-        reject(err)
+        const msg = (err && err.errMsg && err.errMsg.indexOf('timeout') >= 0)
+          ? '请求超时，请检查网络后重试'
+          : ((err && err.errMsg) || '网络请求失败')
+        reject(new Error(msg))
       }
     })
   })
