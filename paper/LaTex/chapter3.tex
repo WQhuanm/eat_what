@@ -388,84 +388,6 @@ O(k \cdot d + k \log k)
 
 认证与鉴权模块实现用户身份的注册、登录与会话管理。后端基于 FastAPI 提供注册、登录两个核心端点，并通过依赖注入机制为受保护接口提供统一的 JWT 校验入口。注册时采用 bcrypt 自适应哈希生成密码摘要；登录时校验密码与账号状态后签发 JWT 令牌，令牌有效期设置为 24 小时。
 
-\begin{lstlisting}[language=Python, caption={认证模块后端核心实现}]
-@router.post("/register", response_model=dict)
-def register(body: UserRegister, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.username == body.username).first():
-        raise HTTPException(status_code=400, detail="用户名已存在")
-    user = User(
-        id=gen_uuid(),
-        username=body.username,
-        password_hash=hash_password(body.password),
-        registration_time=datetime.utcnow(),
-    )
-    db.add(user)
-    db.commit()
-    return {"message": "注册成功", "user_id": user.id}
-
-@router.post("/login", response_model=TokenResponse)
-def login(body: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == body.username).first()
-    if not user or not verify_password(body.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="用户名或密码错误")
-    token = create_access_token(user.id)
-    is_admin = user.role.name == "管理员" if user.role else False
-    return TokenResponse(access_token=token, username=user.username, is_admin=is_admin)
-\end{lstlisting}
-
-前端登录页提供用户名与密码输入框，支持跳转至注册页；注册页采集用户名与密码，提交后自动返回登录页。登录成功后前端将 JWT 令牌持久化存储，用于后续请求的认证头部。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth,height=0.75\textheight,keepaspectratio]{images/3-1.png}
-\caption{登录页与注册页界面截图}
-\label{fig:3-1}
-\end{figure}
-
-\subsection{用户画像模块实现}
-
-用户画像模块实现静态画像的创建、查询与增量更新。后端采用 Pydantic 的 \texttt{exclude\_unset=True} 特性实现部分更新，仅修改客户端显式传入的字段，避免移动端碎片化编辑场景下的全量表单提交。画像与用户之间通过唯一外键建立严格的一对一关系。
-
-\begin{lstlisting}[language=Python, caption={画像模块后端核心实现}]
-@router.get("/", response_model=UserProfileOut)
-def get_profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="尚未创建画像")
-    return profile
-
-@router.post("/", response_model=UserProfileOut)
-def create_profile(body: UserProfileCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    existing = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="画像已存在，请使用PUT更新")
-    profile = UserProfile(user_id=user.id, **body.model_dump(exclude_none=True))
-    db.add(profile)
-    db.commit()
-    db.refresh(profile)
-    return profile
-
-@router.put("/", response_model=UserProfileOut)
-def update_profile(body: UserProfileCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="尚未创建画像")
-    update_data = body.model_dump(exclude_unset=True)
-    for key, val in update_data.items():
-        setattr(profile, key, val)
-    db.commit()
-    db.refresh(profile)
-    return profile
-\end{lstlisting}
-
-前端画像编辑页采用表单布局，分区块展示基础生理信息、健康目标、饮食限制与口味偏好。用户修改任意字段后点击保存，前端仅将变更字段发送至后端执行增量更新。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth,height=0.75\textheight,keepaspectratio]{images/3-2.png}
-\caption{画像编辑页界面截图}
-\label{fig:3-2}
-\end{figure}
 
 \subsection{智能推荐模块实现}
 
@@ -524,36 +446,7 @@ def confirm_selection(body: SelectionConfirm, user: User = Depends(get_current_u
     return {"message": "选择已记录", "dish_name": dish.name}
 \end{lstlisting}
 
-向量生成服务封装 sentence-transformers 模型的加载与编码逻辑，提供菜品向量生成与用户向量融合两个核心函数。模型加载采用 \texttt{local\_files\_only=True} 参数，避免运行时自动联网下载。
-
-\begin{lstlisting}[language=Python, caption={向量生成服务核心实现}]
-def vectorize_text(text: str, dim: int = DEFAULT_VECTOR_DIM) -> List[float]:
-    model = _sentence_model()
-    if model is None:
-        raise ModelUnavailableError("sentence-transformers 模型不可用")
-    embedding = model.encode([text], normalize_embeddings=True)[0]
-    vec = [float(v) for v in embedding.tolist()]
-    return [round(float(x), 8) for x in _l2_normalize(vec)]
-
-def generate_dish_vector(name: str, cuisine=None, taste_tags=None,
-        description=None, ingredients=None, city=None, ...) -> List[float]:
-    taste_scores = infer_taste_scores(name, description, taste_tags, cuisine)
-    text = build_dish_text(name=name, cuisine=cuisine, taste_tags=taste_tags,
-        description=description, ingredients=ingredients, city=city,
-        taste_scores=taste_scores)
-    return _local_model_vectorize(text, dim)
-
-def generate_user_vector(taste_preferences, cuisine_preferences,
-        avoid_foods, answers, ...) -> List[float]:
-    text = "\\n".join([
-        f"用户口味偏好:{tastes}",
-        f"用户菜系偏好:{cuisines}",
-        f"当前时段:{answers.get('meal_time', '')}",
-        f"当前场景人数:{answers.get('dining_scene', '')}",
-        # ... 更多字段拼接
-    ])
-    return _local_model_vectorize(text, dim)
-\end{lstlisting}
+向量生成服务封装 sentence-transformers 模型的加载与编码逻辑，提供菜品向量生成与用户向量融合两个核心函数：菜品向量通过拼接名称、菜系、口味标签、描述、食材及城市等字段生成语义文本，再经模型编码为 768 维向量；用户向量则融合画像偏好与问答场景文本进行编码。
 
 前端问答页采用分步式布局，从后端动态加载题库，每屏展示一至两道题目，底部配置进度指示器。答题过程中答案保存在页面状态中，支持意外退出后的进度恢复。问答完成后前端执行必填项与定位权限的双重校验，通过后将答案与经纬度打包发送。
 
@@ -575,77 +468,10 @@ def generate_user_vector(taste_preferences, cuisine_preferences,
 
 \subsection{菜品管理模块实现}
 
-菜品管理模块实现店铺与菜品信息的录入、查询及语义向量生成。后端在菜品录入时同步触发向量化流程：将菜品的名称、菜系、口味标签、描述、食材及城市按固定模板拼接为语义文本，经 sentence-transformers 编码为 768 维向量后回写至数据库。若模型不可用，服务返回 503 状态码并拒绝写入，防止无效向量进入候选池。
+菜品管理模块实现店铺与菜品信息的录入、查询及语义向量生成。后端在菜品录入时同步触发向量化流程：将菜品的名称、菜系、口味标签、描述、食材及城市按固定模板拼接为语义文本，经 sentence-transformers 编码为 768 维向量后回写至数据库。若模型不可用，服务返回 503 状态码并拒绝写入，防止无效向量进入候选池。前端菜品录入页面向管理员或授权用户提供店铺与菜品信息表单。
 
-\begin{lstlisting}[language=Python, caption={菜品管理模块后端核心实现}]
-@router.post("/dishes", response_model=DishOut)
-def create_dish(body: DishCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    dish = Dish(**body.model_dump(exclude_none=True))
-    # 同步触发向量化
-    shop_name = None
-    if dish.shop_id:
-        shop = db.query(Shop).filter(Shop.id == dish.shop_id).first()
-        shop_name = shop.name if shop else None
-    try:
-        dish.vector = generate_dish_vector(
-            name=dish.name, cuisine=dish.cuisine,
-            taste_tags=dish.taste_tags, description=dish.description,
-            ingredients=dish.ingredients, city=dish.city,
-            latitude=dish.latitude, longitude=dish.longitude,
-            shop_name=shop_name,
-        )
-    except ModelUnavailableError as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
-    db.add(dish); db.commit(); db.refresh(dish)
-    return dish
-\end{lstlisting}
+历史记录与数据闭环模块实现用户选择行为的持久化存储与全链路交互日志记录。后端历史查询接口按时间倒序返回用户过往选择，支持关联查询菜品详情与问答快照。日志记录接口在推荐生成、用户点击与选择确认三个关键节点写入结构化数据，同一批次通过 UUID 关联曝光、确认与负样本记录。前端历史记录页按时间倒序展示过往选择，用户可查看详情或基于历史问答快照重新发起推荐。
 
-前端菜品录入页面向管理员或授权用户，提供店铺信息表单与菜品信息表单。店铺信息包括名称、地址、城市及经纬度；菜品信息包括名称、价格、菜系、口味标签、描述、食材及营养信息。提交成功后前端展示提示并返回个人中心。
-
-\FloatBarrier
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{images/3-5.png}
-\caption{菜品录入页界面截图}
-\label{fig:3-5}
-\end{figure}
-
-\subsection{历史记录与数据闭环模块实现}
-
-历史记录与数据闭环模块实现用户选择行为的持久化存储与全链路交互日志记录。后端历史查询接口按时间倒序返回用户过往选择，支持关联查询菜品详情与问答快照。日志记录接口在推荐生成、用户点击与选择确认三个关键节点写入结构化数据，同一批次通过 UUID 关联曝光、确认与负样本记录。
-
-\begin{lstlisting}[language=Python, caption={历史记录与日志模块后端核心实现}]
-@router.get("/", response_model=List[HistoryRecordOut])
-def get_history(skip: int = 0, limit: int = 20,
-    user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    records = (
-        db.query(HistoryRecord)
-        .options(joinedload(HistoryRecord.dish))
-        .filter(HistoryRecord.user_id == user.id)
-        .order_by(HistoryRecord.dining_time.desc())
-        .offset(skip).limit(limit).all()
-    )
-    result = []
-    for r in records:
-        out = HistoryRecordOut.model_validate(r)
-        if r.dish:
-            out.dish_name = r.dish.name
-            out.price = float(r.dish.price) if r.dish.price else None
-            out.cuisine = r.dish.cuisine; out.taste_tags = r.dish.taste_tags
-            out.image_url = (r.dish.image_urls or [None])[0]
-            if r.dish.shop: out.shop_name = r.dish.shop.name
-        result.append(out)
-    return result
-\end{lstlisting}
-
-前端历史记录页按时间倒序展示过往选择，每条记录展示菜品图片、名称、价格、就餐时间及问答场景摘要。用户点击记录可查看详情，或点击"再来一次"基于历史问答快照重新发起推荐。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth,height=0.7\textheight,keepaspectratio]{images/3-6.png}
-\caption{历史记录页界面截图}
-\label{fig:3-6}
-\end{figure}
 
 \FloatBarrier
 \section{本章小结}
