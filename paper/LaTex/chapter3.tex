@@ -15,6 +15,15 @@
 
 \textbf{数据持久化存储}对应数据层，采用 MySQL 关系型数据库，通过 SQLAlchemy ORM 进行对象关系映射，持久化存储用户基础信息、用户画像、店铺与菜品数据、历史选择记录及交互日志。数据层通过 InnoDB 存储引擎提供事务支持与行级锁机制，保证并发场景下的数据一致性。
 
+系统功能模块划分如图~\ref{fig:module-structure} 所示。各模块之间通过清晰的接口边界与数据流向协同工作：前端负责交互采集与结果展示，后端负责认证、画像、推荐与日志处理，推荐引擎负责核心排序计算，数据库负责统一持久化。该分层结构既保证了业务职责的解耦，也便于后续功能扩展与维护。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/系统功能模块图.png}
+\caption{系统功能模块图}
+\label{fig:module-structure}
+\end{figure}
+
 \subsection{系统整体业务流程}
 
 用户从进入系统到完成一次餐饮决策的完整业务流程如下：用户首次使用时通过注册页面提交用户名与密码，后端使用 bcrypt 算法进行加盐哈希后存入用户表，注册成功后返回登录页面；用户登录通过后，后端签发 JWT 令牌，前端将其持久化存储于本地缓存。登录后用户进入个人中心完善静态画像，包括基础生理信息、健康目标、饮食禁忌与口味偏好等。
@@ -211,6 +220,15 @@ name & VARCHAR(50) & UNIQUE, NOT NULL & 角色名称（如"管理员"） \\
 \end{table}
 
 \section{系统详细设计}
+
+系统详细设计在概要设计的基础上，进一步说明前端交互、推荐流程与数据闭环的实现路径。系统总体流程如图~\ref{fig:overall-flow} 所示，展示了从用户注册登录、画像完善、问答提交到推荐返回、结果确认与历史记录沉淀的完整闭环。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{images/总体流程图.png}
+\caption{系统总体流程图}
+\label{fig:overall-flow}
+\end{figure}
 
 \subsection{前端交互详细设计}
 
